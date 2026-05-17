@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Servicios - Dark Luxury</title>
+  <link rel="stylesheet" href="../../css/style.css">
+  <style>
+    .pricing-section {
+      padding: 4rem 2rem;
+      text-align: center;
+    }
+
+    .pricing-cards {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 2rem;
+      margin-top: 2rem;
+    }
+
+    .card {
+      background-color: var(--card-bg);
+      border: 1px solid #333;
+      border-radius: 10px;
+      padding: 2rem;
+      width: 320px;
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-10px);
+      box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4);
+    }
+
+    .card.standard {
+      border-color: var(--primary);
+      transform: scale(1.05);
+      position: relative;
+    }
+
+    .card.premium {
+      border-color: var(--gold);
+    }
+
+    .popular-badge {
+      position: absolute;
+      top: -15px;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: var(--primary);
+      color: #fff;
+      padding: 5px 15px;
+      border-radius: 20px;
+      font-size: 0.9rem;
+      font-weight: bold;
+    }
+
+    .card h3 {
+      font-size: 1.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .card .price {
+      font-size: 3rem;
+      font-weight: bold;
+      margin-bottom: 1rem;
+      color: var(--text);
+    }
+
+    .card ul {
+      list-style: none;
+      padding: 0;
+      text-align: left;
+      margin-bottom: 2rem;
+      flex-grow: 1;
+    }
+
+    .card ul li {
+      margin-bottom: 0.75rem;
+      display: flex;
+      align-items: center;
+    }
+
+    .card ul li::before {
+      content: '✔';
+      color: var(--primary);
+      margin-right: 10px;
+      font-size: 1.2rem;
+    }
+
+    .card .btn {
+      margin-top: auto;
+    }
+
+    .faq-section {
+      padding: 4rem 2rem;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    .faq-item {
+      background-color: var(--card-bg);
+      margin-bottom: 1rem;
+      border-radius: 5px;
+      overflow: hidden;
+      border: 1px solid #333;
+    }
+
+    .faq-question {
+      width: 100%;
+      background: none;
+      border: none;
+      text-align: left;
+      padding: 1.5rem;
+      font-size: 1.1rem;
+      color: var(--text);
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .faq-question::after {
+      content: '+';
+      font-size: 1.5rem;
+      transition: transform 0.3s ease;
+    }
+
+    .faq-answer {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease, padding 0.3s ease;
+      padding: 0 1.5rem;
+    }
+
+    .faq-item.active .faq-answer {
+      max-height: 200px;
+      padding: 0 1.5rem 1.5rem;
+    }
+
+    .faq-item.active .faq-question::after {
+      transform: rotate(45deg);
+    }
+
+    /* Responsive */
+    @media (max-width: 968px) {
+      .pricing-section,
+      .faq-section {
+        padding: 3rem 1.5rem;
+      }
+
+      .pricing-cards {
+        gap: 1.5rem;
+      }
+
+      .card {
+        width: 100%;
+        max-width: 400px;
+      }
+
+      .card.standard {
+        transform: scale(1);
+      }
+
+      .card h3 {
+        font-size: 1.3rem;
+      }
+
+      .card .price {
+        font-size: 2.5rem;
+      }
+    }
+
+    @media (max-width: 600px) {
+      .pricing-section,
+      .faq-section {
+        padding: 2.5rem 1rem;
+      }
+
+      .pricing-section h2,
+      .faq-section h2 {
+        font-size: 1.75rem;
+      }
+
+      .subtitle {
+        font-size: 1rem;
+      }
+
+      .pricing-cards {
+        gap: 1.5rem;
+      }
+
+      .card {
+        width: 100%;
+        max-width: 100%;
+        padding: 1.5rem;
+      }
+
+      .card h3 {
+        font-size: 1.2rem;
+      }
+
+      .card .price {
+        font-size: 2rem;
+      }
+
+      .card ul {
+        margin-bottom: 1.5rem;
+      }
+
+      .card ul li {
+        font-size: 0.9rem;
+        margin-bottom: 0.6rem;
+      }
+
+      .popular-badge {
+        font-size: 0.8rem;
+        padding: 4px 12px;
+      }
+
+      .faq-question {
+        font-size: 0.95rem;
+        padding: 1rem;
+      }
+
+      .faq-question::after {
+        font-size: 1.3rem;
+      }
+
+      .faq-answer {
+        font-size: 0.9rem;
+      }
+
+      .faq-item.active .faq-answer {
+        max-height: 300px;
+        padding: 0 1rem 1rem;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <div data-include="../../components/header.html"></div>
+
+  <main>
+    <section class="pricing-section">
+      <h2>Tarifas Flexibles</h2>
+      <p class="subtitle">Elige el plan que mejor se adapta a tu visión.</p>
+      <div class="pricing-cards">
+        <!-- Tarjeta Básico -->
+        <div class="card basic">
+          <h3>Básico</h3>
+          <p class="price">€499</p>
+          <ul>
+            <li>Sesión de 2 horas</li>
+            <li>1 localización</li>
+            <li>20 fotos editadas en alta resolución</li>
+            <li>Galería online privada</li>
+          </ul>
+          <a href="contacto.html" class="btn">Reservar</a>
+        </div>
+
+        <!-- Tarjeta Estándar -->
+        <div class="card standard">
+          <div class="popular-badge">Más Popular</div>
+          <h3>Estándar</h3>
+          <p class="price">€899</p>
+          <ul>
+            <li>Sesión de 4 horas</li>
+            <li>Hasta 2 localizaciones</li>
+            <li>50 fotos editadas en alta resolución</li>
+            <li>Galería online privada con descargas</li>
+            <li>1 Impresión Fine Art (30x40cm)</li>
+          </ul>
+          <a href="contacto.html" class="btn btn-primary">Reservar</a>
+        </div>
+
+        <!-- Tarjeta Premium -->
+        <div class="card premium">
+          <h3>Premium</h3>
+          <p class="price">€1499</p>
+          <ul>
+            <li>Sesión de día completo (8 horas)</li>
+            <li>Múltiples localizaciones</li>
+            <li>100+ fotos editadas en alta resolución</li>
+            <li>Álbum de lujo impreso</li>
+            <li>Asesoramiento de estilismo</li>
+            <li>Entrega prioritaria</li>
+          </ul>
+          <a href="contacto.html" class="btn btn-gold">Reservar</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="faq-section">
+      <h2>Preguntas Frecuentes</h2>
+      <div class="faq-container">
+        <div class="faq-item">
+          <button class="faq-question">¿Entregáis todas las fotografías que hacéis?</button>
+          <div class="faq-answer">
+            <p>No. Realizamos una cuidadosa selección de las mejores imágenes para asegurar la máxima calidad. Entregamos solo las fotos que han sido post-procesadas y cumplen nuestros estándares de excelencia.</p>
+          </div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-question">¿Hacéis desplazamientos fuera de la ciudad?</button>
+          <div class="faq-answer">
+            <p>¡Por supuesto! Nos encanta viajar y descubrir nuevas localizaciones. Los planes Estándar y Premium incluyen desplazamientos hasta 100km. Para distancias mayores, se aplicará un suplemento a convenir.</p>
+          </div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-question">¿Cuál es el plazo de entrega del trabajo final?</button>
+          <div class="faq-answer">
+            <p>El plazo de entrega varía según el plan. Para el plan Básico, es de 3-4 semanas. Para el Estándar, 2-3 semanas. El plan Premium tiene entrega prioritaria en menos de 2 semanas.</p>
+          </div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-question">¿Podemos elegir nosotros las fotos a editar?</button>
+          <div class="faq-answer">
+            <p>Confiáis en nosotros para capturar vuestros momentos y también para seleccionar las imágenes más potentes y emotivas. Sin embargo, para los planes Estándar y Premium, ofrecemos una pre-selección sobre la que podéis darnos vuestra opinión.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div data-include="../../components/footer.html"></div>
+
+  <script src="../../js/include.js"></script>
+  <script src="../../js/mobile-menu.js"></script>
+  <script>
+    document.querySelectorAll('.faq-question').forEach(button => {
+      button.addEventListener('click', () => {
+        const faqItem = button.parentElement;
+        faqItem.classList.toggle('active');
+      });
+    });
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Área de Clientes - Login</title>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    
+    <link rel="stylesheet" href="../../css/style.css">
+    <style>
+        /* Ocultar botón de WhatsApp en página de login */
+        .whatsapp-float {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+
+    <div data-include="../../components/header.html"></div>
+
+    <main class="login-section">
+        <div class="login-card">
+            <h2>Acceso Privado</h2>
+            <p>Introduce tus credenciales para acceder.</p>
+            
+            <!-- Credenciales de prueba -->
+            <div style="background-color: #f8f8f8; border: 1px solid var(--border-color); border-radius: 8px; padding: 1.5rem; margin-bottom: 2rem;">
+                <h3 style="font-size: 1rem; color: var(--text-primary); margin-bottom: 1rem; text-align: center;">📋 Credenciales de Prueba</h3>
+                <div style="display: grid; gap: 1rem; font-size: 0.9rem;">
+                    <div style="background-color: #ffffff; padding: 1rem; border-radius: 6px; border-left: 3px solid var(--gold);">
+                        <strong style="color: var(--gold);">👨‍💼 Administrador:</strong><br>
+                        Email: <code style="background: #e8e8e8; padding: 0.2rem 0.5rem; border-radius: 3px; font-family: monospace;">admin@admin</code><br>
+                        Clave: <code style="background: #e8e8e8; padding: 0.2rem 0.5rem; border-radius: 3px; font-family: monospace;">1234</code>
+                    </div>
+                    <div style="background-color: #ffffff; padding: 1rem; border-radius: 6px; border-left: 3px solid var(--gold);">
+                        <strong style="color: var(--gold);">👤 Cliente Demo:</strong><br>
+                        Email: <code style="background: #e8e8e8; padding: 0.2rem 0.5rem; border-radius: 3px; font-family: monospace; font-size: 0.8rem;">ana.carlos@ejemplo.com</code><br>
+                        Clave: <code style="background: #e8e8e8; padding: 0.2rem 0.5rem; border-radius: 3px; font-family: monospace;">BODA2024</code>
+                    </div>
+                </div>
+                <p style="margin-top: 0.75rem; font-size: 0.8rem; color: #666; text-align: center;">
+                    💡 Para más clientes demo, inicializa los datos desde el Admin Panel
+                </p>
+            </div>
+
+            <form id="loginForm" class="login-form" aria-label="Formulario de inicio de sesión">
+                <div class="form-group">
+                    <label for="username">Usuario / Email</label>
+                    <input type="text" id="username" name="username" required aria-required="true" aria-label="Ingresa tu correo electrónico o nombre de usuario" autocomplete="username">
+                </div>
+                <div class="form-group">
+                    <label for="access-code">Contraseña / Clave</label>
+                    <input type="password" id="access-code" name="access-code" required aria-required="true" aria-label="Ingresa tu contraseña o clave de acceso" autocomplete="current-password">
+                </div>
+                <button type="submit" id="submitButton" class="btn-acceder" aria-label="Iniciar sesión en el área de clientes">Acceder</button>
+            </form>
+        </div>
+    </main>
+
+    <div data-include="../../components/footer.html"></div>
+
+    <script src="../../js/include.js"></script>
+    <script src="../../js/mobile-menu.js"></script>
+    <!-- Servicios de Backend -->
+    <script src="../../js/config.js"></script>
+    <script src="../../js/auth.js"></script>
+    <script src="../../js/db.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const loginForm = document.getElementById('loginForm');
+            const usernameInput = document.getElementById('username');
+            const accessCodeInput = document.getElementById('access-code');
+            const submitButton = document.getElementById('submitButton');
+            const loginCard = document.querySelector('.login-card');
+
+            // --- Verificar si ya hay sesión activa ---
+            const session = await window.authService.checkSession();
+            if (session) {
+                if (session.type === 'admin') {
+                    window.location.href = '../admin/admin-panel.html';
+                    return;
+                } else {
+                    window.location.href = `dashboard-cliente.html?key=${encodeURIComponent(session.accessCode)}`;
+                    return;
+                }
+            }
+
+            // Modo demo desactivado - usar solo Supabase
+
+            // --- Función para mostrar errores ---
+            const showError = (message) => {
+                const existingError = loginCard.querySelector('.error-message');
+                if (existingError) {
+                    existingError.remove();
+                }
+
+                const errorDiv = document.createElement('div');
+                errorDiv.textContent = message;
+                errorDiv.style.color = '#ff4d4d';
+                errorDiv.style.marginTop = '1rem';
+                errorDiv.style.textAlign = 'center';
+                errorDiv.style.fontSize = '0.9rem';
+                errorDiv.classList.add('error-message');
+                loginCard.appendChild(errorDiv);
+
+                submitButton.textContent = 'Acceder';
+                submitButton.disabled = false;
+            };
+
+            // --- Evento de Envío del Formulario ---
+            loginForm.addEventListener('submit', async (event) => {
+                event.preventDefault();
+
+                const email = usernameInput.value.trim();
+                const accessCode = accessCodeInput.value.trim();
+                
+                const existingError = loginCard.querySelector('.error-message');
+                if (existingError) {
+                    existingError.remove();
+                }
+
+                if (!email) {
+                    showError('Por favor, introduce tu email.');
+                    usernameInput.focus();
+                    return;
+                }
+
+                if (!accessCode) {
+                    showError('Por favor, introduce tu clave de acceso.');
+                    accessCodeInput.focus();
+                    return;
+                }
+
+                submitButton.textContent = 'Verificando...';
+                submitButton.disabled = true;
+
+                try {
+                    // Intentar login como admin primero
+                    const adminResult = await window.authService.loginAdmin(email, accessCode);
+                    
+                    if (adminResult.success) {
+                        window.location.href = '../admin/admin-panel.html';
+                        return;
+                    }
+
+                    // Si no es admin, intentar como cliente
+                    const clientResult = await window.authService.loginClient(email, accessCode);
+                    
+                    if (clientResult.success) {
+                        window.location.href = `dashboard-cliente.html?key=${encodeURIComponent(clientResult.user.accessCode)}`;
+                    } else {
+                        showError('Credenciales incorrectas. Verifica tus datos.');
+                        submitButton.disabled = false;
+                        submitButton.textContent = 'Acceder';
+                    }
+                } catch (error) {
+                    console.error('Error en login:', error);
+                    showError('Error al iniciar sesión. Intenta de nuevo.');
+                    submitButton.disabled = false;
+                    submitButton.textContent = 'Acceder';
+                }
+            });
+        });
+    </script>
+
+</body>
+</html>

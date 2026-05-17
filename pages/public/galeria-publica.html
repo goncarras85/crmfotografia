@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Galería Compartida</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="../../css/style.css">
+    
+    <style>
+        body {
+            background: var(--bg);
+            min-height: 100vh;
+        }
+
+        .public-gallery-header {
+            background: var(--card-bg);
+            border-bottom: 1px solid var(--border-color);
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .public-gallery-header h1 {
+            font-size: 2rem;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .public-gallery-header p {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+
+        .public-gallery-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 3rem 2rem;
+        }
+
+        .category-tabs {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .category-tab {
+            padding: 0.75rem 1.5rem;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 25px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .category-tab:hover {
+            border-color: var(--gold);
+            color: var(--gold);
+        }
+
+        .category-tab.active {
+            background: var(--gold);
+            color: var(--bg);
+            border-color: var(--gold);
+        }
+
+        .photos-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .photo-card {
+            background: var(--card-bg);
+            border-radius: 8px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .photo-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+        }
+
+        .photo-card img {
+            width: 100%;
+            height: 250px;
+            object-fit: cover;
+            display: block;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: var(--text-secondary);
+        }
+
+        .empty-state i {
+            font-size: 4rem;
+            color: var(--gold);
+            margin-bottom: 1rem;
+        }
+
+        /* Lightbox */
+        #lightbox {
+            display: none;
+            position: fixed;
+            z-index: 10000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.95);
+            align-items: center;
+            justify-content: center;
+        }
+
+        #lightbox.visible {
+            display: flex;
+        }
+
+        #lightbox img {
+            max-width: 90%;
+            max-height: 90vh;
+            object-fit: contain;
+        }
+
+        #lightbox .close-btn {
+            position: absolute;
+            top: 2rem;
+            right: 2rem;
+            font-size: 2.5rem;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        #lightbox .close-btn:hover {
+            color: var(--gold);
+            transform: rotate(90deg);
+        }
+
+        #lightbox .lightbox-prev,
+        #lightbox .lightbox-next {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            transition: all 0.3s ease;
+            z-index: 10001;
+        }
+
+        #lightbox .lightbox-prev {
+            left: 2rem;
+        }
+
+        #lightbox .lightbox-next {
+            right: 2rem;
+        }
+
+        #lightbox .lightbox-prev:hover,
+        #lightbox .lightbox-next:hover {
+            background: rgba(0, 0, 0, 0.8);
+            color: var(--gold);
+            transform: translateY(-50%) scale(1.1);
+        }
+
+        .protected-message {
+            text-align: center;
+            padding: 4rem 2rem;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .protected-message i {
+            font-size: 4rem;
+            color: var(--gold);
+            margin-bottom: 1.5rem;
+        }
+
+        .protected-message h2 {
+            color: var(--text-primary);
+            margin-bottom: 1rem;
+        }
+
+        .protected-message p {
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        @media (max-width: 768px) {
+            .public-gallery-header h1 {
+                font-size: 1.5rem;
+            }
+
+            .photos-grid {
+                grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+                gap: 1rem;
+            }
+
+            .category-tabs {
+                gap: 0.5rem;
+            }
+
+            .category-tab {
+                padding: 0.6rem 1.2rem;
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div data-include="../../components/header.html"></div>
+
+    <div class="public-gallery-header">
+        <h1 id="galleryTitle">Galería Compartida</h1>
+        <p id="gallerySubtitle">Explora las fotos compartidas</p>
+    </div>
+
+    <div class="public-gallery-container">
+        <div class="category-tabs" id="categoryTabs">
+            <!-- Tabs se generarán dinámicamente -->
+        </div>
+
+        <div class="photos-grid" id="photosGrid">
+            <!-- Fotos se generarán dinámicamente -->
+        </div>
+
+        <div id="errorMessage" style="display: none;">
+            <div class="protected-message">
+                <i class="fas fa-lock"></i>
+                <h2>Galería No Disponible</h2>
+                <p>Esta galería no existe o el enlace ha expirado. Por favor, verifica el enlace o contacta con el administrador.</p>
+            </div>
+        </div>
+    </div>
+
+    <div data-include="../../components/footer.html"></div>
+
+    <!-- Lightbox -->
+    <div id="lightbox">
+        <span class="close-btn">&times;</span>
+        <button class="lightbox-prev" aria-label="Foto anterior">
+            <i class="fas fa-chevron-left"></i>
+        </button>
+        <button class="lightbox-next" aria-label="Foto siguiente">
+            <i class="fas fa-chevron-right"></i>
+        </button>
+        <img src="" alt="Imagen ampliada">
+    </div>
+
+    <script src="../../js/include.js"></script>
+    <script src="../../js/mobile-menu.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const categoryTabs = document.getElementById('categoryTabs');
+            const photosGrid = document.getElementById('photosGrid');
+            const galleryTitle = document.getElementById('galleryTitle');
+            const gallerySubtitle = document.getElementById('gallerySubtitle');
+            const errorMessage = document.getElementById('errorMessage');
+            const lightbox = document.getElementById('lightbox');
+            const lightboxImg = lightbox.querySelector('img');
+            const closeLightboxBtn = lightbox.querySelector('.close-btn');
+
+            // Obtener el token de la URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const shareToken = urlParams.get('token');
+
+            let currentCategory = 'all';
+            let allPhotos = {};
+
+            // Si hay token, cargar galería compartida
+            if (shareToken) {
+                const sharedGalleries = JSON.parse(localStorage.getItem('sharedGalleries') || '{}');
+                const galleryData = sharedGalleries[shareToken];
+
+                if (galleryData) {
+                    // Verificar si ha expirado
+                    if (galleryData.expiresAt) {
+                        const expirationDate = new Date(galleryData.expiresAt);
+                        if (expirationDate < new Date()) {
+                            showExpiredMessage();
+                            return;
+                        }
+                    }
+
+                    // Mostrar galería compartida
+                    galleryTitle.textContent = galleryData.clientName;
+                    gallerySubtitle.textContent = `Galería creada el ${new Date(galleryData.createdAt).toLocaleDateString('es-ES')}`;
+                    allPhotos = galleryData.photos || {};
+                } else {
+                    showError();
+                    return;
+                }
+            } else {
+                // Modo ejemplo: mostrar galería de ejemplo
+                galleryTitle.textContent = 'Galería de Ejemplo';
+                gallerySubtitle.textContent = 'Explora nuestras mejores fotografías';
+                
+                // Fotos de ejemplo organizadas por categorías
+                allPhotos = {
+                    'Bodas': [
+                        'https://picsum.photos/seed/boda1/800/600',
+                        'https://picsum.photos/seed/boda2/800/600',
+                        'https://picsum.photos/seed/boda3/800/600',
+                        'https://picsum.photos/seed/boda4/800/600',
+                        'https://picsum.photos/seed/boda5/800/600',
+                        'https://picsum.photos/seed/boda6/800/600'
+                    ],
+                    'Comuniones': [
+                        'https://picsum.photos/seed/comunion1/800/600',
+                        'https://picsum.photos/seed/comunion2/800/600',
+                        'https://picsum.photos/seed/comunion3/800/600',
+                        'https://picsum.photos/seed/comunion4/800/600'
+                    ],
+                    'Infantil': [
+                        'https://picsum.photos/seed/infantil1/800/600',
+                        'https://picsum.photos/seed/infantil2/800/600',
+                        'https://picsum.photos/seed/infantil3/800/600',
+                        'https://picsum.photos/seed/infantil4/800/600',
+                        'https://picsum.photos/seed/infantil5/800/600'
+                    ],
+                    'Eventos': [
+                        'https://picsum.photos/seed/evento1/800/600',
+                        'https://picsum.photos/seed/evento2/800/600',
+                        'https://picsum.photos/seed/evento3/800/600'
+                    ]
+                };
+            }
+
+            // Renderizar tabs de categorías
+            function renderTabs() {
+                let tabsHtml = `
+                    <div class="category-tab active" data-category="all">
+                        <i class="fas fa-th"></i> Todas
+                    </div>
+                `;
+
+                Object.keys(allPhotos).forEach(categoryName => {
+                    const count = allPhotos[categoryName].length;
+                    tabsHtml += `
+                        <div class="category-tab" data-category="${categoryName}">
+                            <i class="fas fa-folder"></i> ${categoryName} (${count})
+                        </div>
+                    `;
+                });
+
+                categoryTabs.innerHTML = tabsHtml;
+
+                // Listeners
+                categoryTabs.querySelectorAll('.category-tab').forEach(tab => {
+                    tab.addEventListener('click', () => {
+                        const category = tab.dataset.category;
+                        selectCategory(category);
+                    });
+                });
+            }
+
+            function selectCategory(category) {
+                currentCategory = category;
+
+                // Actualizar tabs activos
+                categoryTabs.querySelectorAll('.category-tab').forEach(tab => {
+                    tab.classList.remove('active');
+                });
+                categoryTabs.querySelector(`[data-category="${category}"]`).classList.add('active');
+
+                renderPhotos(category);
+            }
+
+            function renderPhotos(category) {
+                let photos = [];
+
+                if (category === 'all') {
+                    photos = Object.values(allPhotos).flat();
+                } else {
+                    photos = allPhotos[category] || [];
+                }
+
+                if (photos.length === 0) {
+                    photosGrid.innerHTML = `
+                        <div class="empty-state" style="grid-column: 1/-1;">
+                            <i class="fas fa-images"></i>
+                            <h3>No hay fotos en esta categoría</h3>
+                        </div>
+                    `;
+                    return;
+                }
+
+                photosGrid.innerHTML = photos.map((photo, index) => `
+                    <div class="photo-card" data-index="${index}">
+                        <img src="${photo}" alt="Foto de galería" loading="lazy">
+                    </div>
+                `).join('');
+
+                // Listeners para abrir lightbox
+                photosGrid.querySelectorAll('.photo-card').forEach(card => {
+                    card.addEventListener('click', () => {
+                        const index = parseInt(card.dataset.index);
+                        openLightbox(photos[index]);
+                    });
+                });
+            }
+
+            let allVisiblePhotos = [];
+
+            function openLightbox(photoUrl) {
+                lightboxImg.src = photoUrl;
+                lightbox.classList.add('visible');
+                document.body.style.overflow = 'hidden';
+                
+                // Guardar todas las fotos visibles para navegación
+                allVisiblePhotos = currentCategory === 'all' 
+                    ? Object.values(allPhotos).flat() 
+                    : allPhotos[currentCategory] || [];
+                lightbox.dataset.currentIndex = allVisiblePhotos.indexOf(photoUrl);
+            }
+
+            function closeLightbox() {
+                lightbox.classList.remove('visible');
+                document.body.style.overflow = 'auto';
+            }
+
+            closeLightboxBtn.addEventListener('click', closeLightbox);
+            lightbox.addEventListener('click', (e) => {
+                if (e.target === lightbox) {
+                    closeLightbox();
+                }
+            });
+
+            // Botones de navegación
+            const prevBtn = lightbox.querySelector('.lightbox-prev');
+            const nextBtn = lightbox.querySelector('.lightbox-next');
+            
+            if (prevBtn) {
+                prevBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    navigateLightbox(-1);
+                });
+            }
+            
+            if (nextBtn) {
+                nextBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    navigateLightbox(1);
+                });
+            }
+
+            document.addEventListener('keydown', (e) => {
+                if (lightbox.classList.contains('visible')) {
+                    if (e.key === 'Escape') {
+                        closeLightbox();
+                    } else if (e.key === 'ArrowLeft') {
+                        navigateLightbox(-1);
+                    } else if (e.key === 'ArrowRight') {
+                        navigateLightbox(1);
+                    }
+                }
+            });
+
+            function navigateLightbox(direction) {
+                if (allVisiblePhotos.length === 0) return;
+                
+                let currentIndex = parseInt(lightbox.dataset.currentIndex || '0');
+                currentIndex += direction;
+                
+                // Navegación circular
+                if (currentIndex < 0) {
+                    currentIndex = allVisiblePhotos.length - 1;
+                } else if (currentIndex >= allVisiblePhotos.length) {
+                    currentIndex = 0;
+                }
+                
+                lightboxImg.src = allVisiblePhotos[currentIndex];
+                lightbox.dataset.currentIndex = currentIndex;
+            }
+
+            function showError() {
+                errorMessage.style.display = 'block';
+                categoryTabs.style.display = 'none';
+                photosGrid.style.display = 'none';
+            }
+
+            function showExpiredMessage() {
+                errorMessage.innerHTML = `
+                    <div class="protected-message">
+                        <i class="fas fa-calendar-times"></i>
+                        <h2>Enlace Expirado</h2>
+                        <p>Este enlace de galería ha expirado. Por favor, solicita un nuevo enlace al administrador.</p>
+                    </div>
+                `;
+                errorMessage.style.display = 'block';
+                categoryTabs.style.display = 'none';
+                photosGrid.style.display = 'none';
+            }
+
+            // Inicializar
+            renderTabs();
+            renderPhotos('all');
+
+            // Incrementar contador de visitas solo si hay token
+            if (shareToken && galleryData && galleryData.views !== undefined) {
+                galleryData.views = (galleryData.views || 0) + 1;
+                const sharedGalleries = JSON.parse(localStorage.getItem('sharedGalleries') || '{}');
+                sharedGalleries[shareToken] = galleryData;
+                localStorage.setItem('sharedGalleries', JSON.stringify(sharedGalleries));
+            }
+        });
+    </script>
+</body>
+</html>

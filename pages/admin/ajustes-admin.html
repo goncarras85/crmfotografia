@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ajustes - CL Fotógrafos</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="../../css/style.css">
+    <script src="../../js/notifications.js" defer></script>
+    <script src="../../js/modals.js"></script>
+    <style>
+        /* Moderno Settings Container */
+        .settings-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .settings-grid {
+            display: grid;
+            gap: 2rem;
+        }
+
+        /* Modern Card Design */
+        .settings-card {
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 2.5rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+            border: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+        }
+
+        .settings-card:hover {
+            box-shadow: 0 4px 16px rgba(161, 140, 90, 0.1);
+            border-color: var(--gold);
+        }
+
+        .settings-card-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .settings-card-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, var(--gold) 0%, #8a7548 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .settings-card-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin: 0;
+        }
+
+        /* Form Modernizado */
+        .modern-form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .modern-form-field {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .modern-form-field label {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .modern-form-field input {
+            padding: 0.875rem 1rem;
+            border: 1.5px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 1rem;
+            font-family: 'Montserrat', sans-serif;
+            transition: all 0.2s ease;
+            background: #fafafa;
+        }
+
+        .modern-form-field input:focus {
+            outline: none;
+            border-color: var(--gold);
+            background: #ffffff;
+            box-shadow: 0 0 0 3px rgba(161, 140, 90, 0.1);
+        }
+
+        .modern-form-field input:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            background: #f0f0f0;
+        }
+
+        /* Modern Button */
+        .modern-save-btn {
+            background: linear-gradient(135deg, var(--gold) 0%, #8a7548 100%);
+            color: #ffffff;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .modern-save-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(161, 140, 90, 0.3);
+        }
+
+        /* Permission Card Modernizada */
+        .modern-permission-card {
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+            padding: 1.25rem;
+            background: #fafafa;
+            border-radius: 10px;
+            border: 2px solid var(--border-color);
+            transition: all 0.2s ease;
+            cursor: pointer;
+            margin-bottom: 1rem;
+        }
+
+        .modern-permission-card:hover {
+            border-color: var(--gold);
+            background: #ffffff;
+            transform: translateX(4px);
+        }
+
+        .modern-permission-card.admin-permission {
+            border-color: var(--gold);
+            background: linear-gradient(135deg, rgba(161, 140, 90, 0.05) 0%, rgba(161, 140, 90, 0.1) 100%);
+        }
+
+        .modern-permission-checkbox {
+            width: 24px;
+            height: 24px;
+            min-width: 24px;
+            cursor: pointer;
+            accent-color: var(--gold);
+        }
+
+        .modern-permission-info h4 {
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.4rem;
+            font-size: 1rem;
+        }
+
+        .modern-permission-info p {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin: 0;
+            line-height: 1.5;
+        }
+
+        /* Admin Table Modern */
+        .modern-admin-table {
+            background: #ffffff;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+        }
+
+        .modern-admin-table-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 2rem;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .modern-admin-table-header h2 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin: 0;
+        }
+
+        .modern-admin-table table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .modern-admin-table thead th {
+            background: var(--gold);
+            color: #ffffff;
+            padding: 1.25rem 1.5rem;
+            text-align: left;
+            font-weight: 600;
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .modern-admin-table tbody td {
+            padding: 1.25rem 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-primary);
+        }
+
+        .modern-admin-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .modern-admin-table tbody tr:hover {
+            background: #fafafa;
+        }
+
+        /* Action Buttons */
+        .modern-action-btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            font-size: 1.25rem;
+            transition: all 0.2s ease;
+            border-radius: 6px;
+        }
+
+        .modern-action-btn:hover {
+            background: var(--border-color);
+            transform: scale(1.1);
+        }
+
+        /* Alert Banner */
+        .alert-banner {
+            background: linear-gradient(135deg, rgba(161, 140, 90, 0.1) 0%, rgba(161, 140, 90, 0.05) 100%);
+            border-left: 4px solid var(--gold);
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .alert-banner-icon {
+            font-size: 1.5rem;
+        }
+
+        .alert-banner-text {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .settings-container {
+                padding: 1rem;
+            }
+
+            .settings-card {
+                padding: 1.5rem;
+            }
+
+            .modern-form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .modern-admin-table-header {
+                flex-direction: column;
+                gap: 1rem;
+                align-items: stretch;
+            }
+
+            .modern-admin-table table {
+                font-size: 0.875rem;
+            }
+
+            .modern-admin-table thead th,
+            .modern-admin-table tbody td {
+                padding: 0.875rem 1rem;
+            }
+        }
+    </style>
+</head>
+<body class="admin-panel-body">
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-logo">CL<span>.</span>FOTÓGRAFOS</div>
+        <nav class="sidebar-nav">
+            <ul>
+                <li><a href="admin-panel.html">Dashboard</a></li>
+                <li><a href="mis-clientes.html">Mis Clientes</a></li>
+                <li><a href="gestionar-administradores.html">Administradores</a></li>
+                <li><a href="ajustes-admin.html" class="active">Ajustes</a></li>
+            </ul>
+        </nav>
+        <div class="sidebar-footer">
+            <div class="admin-profile">
+                <div class="admin-profile-avatar"></div>
+                <div class="admin-profile-info">
+                    <p>C. Lorenzo</p>
+                    <span>Admin</span>
+                </div>
+            </div>
+            <button class="logout-btn" id="logoutBtn">Salir</button>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="settings-container">
+            <div class="settings-grid">
+                
+                <!-- Perfil del Administrador -->
+                <div class="settings-card">
+                    <div class="settings-card-header">
+                        <div class="settings-card-icon">P</div>
+                        <h2 class="settings-card-title">Perfil del Administrador</h2>
+                    </div>
+                    
+                    <div class="alert-banner">
+                        <div class="alert-banner-icon">i</div>
+                        <div class="alert-banner-text">
+                            Actualiza tu información personal. Estos datos se mostrarán en tu perfil.
+                        </div>
+                    </div>
+
+                    <div class="modern-form-grid">
+                        <div class="modern-form-field">
+                            <label>Nombre Completo</label>
+                            <input type="text" id="adminName" value="Carlos Lorenzo" placeholder="Tu nombre completo">
+                        </div>
+                        <div class="modern-form-field">
+                            <label>Email</label>
+                            <input type="email" id="adminEmail" value="carlos@clfotografos.com" placeholder="tu@email.com">
+                        </div>
+                        <div class="modern-form-field">
+                            <label>Teléfono</label>
+                            <input type="tel" id="adminPhone" value="+34 612 345 678" placeholder="+34 XXX XXX XXX">
+                        </div>
+                    </div>
+                    
+                    <button class="modern-save-btn" id="saveProfileBtn">
+                        Guardar Cambios
+                    </button>
+                </div>
+
+                <!-- Seguridad -->
+                <div class="settings-card">
+                    <div class="settings-card-header">
+                        <div class="settings-card-icon">S</div>
+                        <h2 class="settings-card-title">Seguridad</h2>
+                    </div>
+                    
+                    <div class="alert-banner">
+                        <div class="alert-banner-icon">!</div>
+                        <div class="alert-banner-text">
+                            Cambia tu contraseña regularmente para mantener tu cuenta segura.
+                        </div>
+                    </div>
+
+                    <div class="modern-form-grid">
+                        <div class="modern-form-field">
+                            <label>Contraseña Actual</label>
+                            <input type="password" id="currentPassword" placeholder="Tu contraseña actual">
+                        </div>
+                        <div class="modern-form-field">
+                            <label>Nueva Contraseña</label>
+                            <input type="password" id="newPassword" placeholder="Mínimo 6 caracteres">
+                        </div>
+                        <div class="modern-form-field">
+                            <label>Confirmar Nueva Contraseña</label>
+                            <input type="password" id="confirmPassword" placeholder="Repite la contraseña">
+                        </div>
+                    </div>
+                    
+                    <button class="modern-save-btn" id="changePasswordBtn">
+                        Cambiar Contraseña
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Verificar sesión de administrador
+            const adminSession = sessionStorage.getItem('adminSession');
+            if (!adminSession) {
+                window.location.href = '../client/area-clientes.html';
+                return;
+            }
+
+            const session = JSON.parse(adminSession);
+            const isSupremo = session.isSupremo === true || session.permissions === 'all';
+            
+            // Actualizar nombre del admin en el sidebar
+            const adminNameDisplay = document.getElementById('adminNameDisplay');
+            if (adminNameDisplay) {
+                if (session.name) {
+                    adminNameDisplay.textContent = session.name;
+                } else if (session.email) {
+                    // Fallback: usar email si no hay nombre
+                    adminNameDisplay.textContent = session.email.split('@')[0];
+                }
+            }
+
+            // --- Save Profile ---
+            document.getElementById('saveProfileBtn').addEventListener('click', () => {
+                const adminData = {
+                    name: document.getElementById('adminName').value,
+                    email: document.getElementById('adminEmail').value,
+                    phone: document.getElementById('adminPhone').value
+                };
+                localStorage.setItem('adminProfile', JSON.stringify(adminData));
+            });
+
+            // Load existing profile
+            const savedProfile = localStorage.getItem('adminProfile');
+            if (savedProfile) {
+                const profile = JSON.parse(savedProfile);
+                document.getElementById('adminName').value = profile.name || 'Carlos Lorenzo';
+                document.getElementById('adminPhone').value = profile.phone || '+34 612 345 678';
+            }
+
+            // Si es admin supremo, mostrar email fijo
+            if (isSupremo) {
+                document.getElementById('adminEmail').value = 'admin@clfotografos.com';
+                document.getElementById('adminEmail').disabled = true;
+            } else {
+                document.getElementById('adminEmail').value = session.email;
+                document.getElementById('adminEmail').disabled = true;
+            }
+
+            // --- Change Password ---
+            document.getElementById('changePasswordBtn').addEventListener('click', () => {
+                const current = document.getElementById('currentPassword').value;
+                const newPass = document.getElementById('newPassword').value;
+                const confirm = document.getElementById('confirmPassword').value;
+
+                if (!current || !newPass || !confirm) {
+                    return;
+                }
+
+                if (newPass !== confirm) {
+                    return;
+                }
+
+                if (newPass.length < 6) {
+                    return;
+                }
+
+                localStorage.setItem('adminPassword', newPass);
+                document.getElementById('currentPassword').value = '';
+                document.getElementById('newPassword').value = '';
+                document.getElementById('confirmPassword').value = '';
+            });
+
+
+            // Modern Alert Function
+            function showModernAlert(message, type = 'info') {
+                const existingAlert = document.querySelector('.modern-alert');
+                if (existingAlert) existingAlert.remove();
+
+                const colors = {
+                    success: 'linear-gradient(135deg, #4CAF50 0%, #45a049 100%)',
+                    error: 'linear-gradient(135deg, #f44336 0%, #da190b 100%)',
+                    warning: 'linear-gradient(135deg, #ff9800 0%, #e68900 100%)',
+                    info: 'linear-gradient(135deg, var(--gold) 0%, #8a7548 100%)'
+                };
+
+                const prefixes = {
+                    success: '✓ ',
+                    error: '✕ ',
+                    warning: '! ',
+                    info: 'ⓘ '
+                };
+
+                const alert = document.createElement('div');
+                alert.className = 'modern-alert';
+                alert.style.cssText = `
+                    position: fixed;
+                    top: 2rem;
+                    right: 2rem;
+                    background: ${colors[type]};
+                    color: white;
+                    padding: 1rem 1.5rem;
+                    border-radius: 8px;
+                    box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+                    z-index: 10000;
+                    font-weight: 600;
+                    animation: slideIn 0.3s ease;
+                `;
+                alert.textContent = prefixes[type] + message.replace(/[✅❌⚠️ℹ️]/g, '').trim();
+                document.body.appendChild(alert);
+
+                setTimeout(() => {
+                    alert.style.animation = 'slideOut 0.3s ease';
+                    setTimeout(() => alert.remove(), 300);
+                }, 3000);
+            }
+
+            // Add animations
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes slideIn {
+                    from { transform: translateX(400px); opacity: 0; }
+                    to { transform: translateX(0); opacity: 1; }
+                }
+                @keyframes slideOut {
+                    from { transform: translateX(0); opacity: 1; }
+                    to { transform: translateX(400px); opacity: 0; }
+                }
+            `;
+            document.head.appendChild(style);
+
+            // Initial render
+            if (typeof renderAdministrators === 'function') {
+                renderAdministrators();
+            }
+
+            // --- Botón de Logout ---
+            const logoutBtn = document.querySelector('.logout-btn');
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', async (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('🚪 Click en botón Salir');
+                    
+                    if (window.authService && typeof window.authService.logout === 'function') {
+                        try {
+                            window.authService.logout();
+                        } catch (error) {
+                            console.error('❌ Error al hacer logout:', error);
+                            sessionStorage.clear();
+                            window.location.href = '../client/area-clientes.html';
+                        }
+                    } else {
+                        console.warn('⚠️ authService no disponible, usando fallback');
+                        sessionStorage.clear();
+                        window.location.href = '../client/area-clientes.html';
+                    }
+                });
+            }
+        });
+    </script>
+
+</body>
+</html>

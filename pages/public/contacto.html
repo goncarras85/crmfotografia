@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contacto - Dark Luxury</title>
+  <link rel="stylesheet" href="../../css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+
+</head>
+
+<body>
+  <!-- Skip to content link (accesibilidad) -->
+  <a href="#main-content" class="skip-to-content">Saltar al contenido principal</a>
+
+  <div data-include="../../components/header.html"></div>
+
+  <main id="main-content">
+    <section class="contact-section">
+      <div class="contact-container">
+        <!-- Columna del Formulario -->
+        <div class="contact-form">
+          <h2>Hablemos</h2>
+          <form id="contact-form" action="https://formspree.io/f/your-unique-form-id" method="POST">
+            <div class="form-group">
+              <label for="name">Nombre Completo</label>
+              <input type="text" id="name" name="name" required>
+            </div>
+            <div class="form-group">
+              <label for="email">Email</label>
+              <input type="email" id="email" name="email" required>
+            </div>
+            <div class="form-group">
+              <label for="wedding-date">Fecha de la Boda / Evento <span style="color: var(--text-secondary); font-size: 0.85rem;">(Opcional - formato: DD/MM/AAAA)</span></label>
+              <input type="text" id="wedding-date" name="wedding-date" placeholder="Ej: 25/12/2025">
+              <span id="date-error" style="color: #f44336; font-size: 0.85rem; display: none; margin-top: 0.5rem;">Por favor, introduce una fecha válida y futura (DD/MM/AAAA)</span>
+            </div>
+            <div class="form-group">
+              <label for="message">Cuéntame tu idea</label>
+              <textarea id="message" name="message" required></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary" style="width: 100%;">Enviar Mensaje</button>
+          </form>
+          <div id="form-status" style="margin-top: 1rem; text-align: center;"></div>
+        </div>
+
+        <!-- Columna de Información y Mapa -->
+        <div class="contact-info">
+          <h2>Información</h2>
+          <ul>
+            <li>
+              <span class="icon"><i class="fas fa-phone-alt"></i></span>
+              <span>+34 600 000 000</span>
+            </li>
+            <li>
+              <span class="icon"><i class="fas fa-envelope"></i></span>
+              <span>hola@darkluxury.com</span>
+            </li>
+            <li>
+              <span class="icon"><i class="fab fa-whatsapp"></i></span>
+              <a href="https://wa.me/34600000000?text=Hola,%20me%20gustaría%20información%20sobre%20sus%20servicios" 
+                 target="_blank" 
+                 style="color: #25D366; font-weight: 600; text-decoration: none; transition: all 0.3s ease;">
+                 Contactar por WhatsApp
+              </a>
+            </li>
+            <li>
+              <span class="icon"><i class="fas fa-map-marker-alt"></i></span>
+              <span>Atendemos en toda la península.</span>
+            </li>
+          </ul>
+          <div class="map-container">
+            <iframe
+              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d24396.94784098394!2d-3.8166207!3d40.2039285!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0xd418b0f8f6e0c71%3A0x8e6b3e1e8f8e8e8e!2s28991%20Torrej%C3%B3n%20de%20la%20Calzada%2C%20Madrid!5e0!3m2!1ses!2ses!4v1672866099000!5m2!1ses!2ses"
+              allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div data-include="../../components/footer.html"></div>
+
+  <script src="../../js/include.js"></script>
+  <script src="../../js/mobile-menu.js"></script>
+
+  <style>
+    /* Ocultar botón de WhatsApp en página de contacto */
+    .whatsapp-float {
+      display: none !important;
+    }
+  </style>
+
+  <script src="js/include.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      var form = document.getElementById('contact-form');
+      var status = document.getElementById('form-status');
+      var weddingDateInput = document.getElementById('wedding-date');
+      var dateError = document.getElementById('date-error');
+
+      // Validar fecha mientras el usuario escribe
+      weddingDateInput.addEventListener('input', function(e) {
+        var value = e.target.value.trim();
+        
+        // Si el campo está vacío, no mostrar error (es opcional)
+        if (value === '') {
+          dateError.style.display = 'none';
+          weddingDateInput.style.borderColor = '';
+          return;
+        }
+
+        // Validar formato DD/MM/AAAA
+        var datePattern = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/;
+        var match = value.match(datePattern);
+
+        if (match) {
+          var day = parseInt(match[1], 10);
+          var month = parseInt(match[2], 10);
+          var year = parseInt(match[3], 10);
+
+          // Validar que la fecha sea real
+          var date = new Date(year, month - 1, day);
+          var today = new Date();
+          today.setHours(0, 0, 0, 0); // Comparar solo la fecha, sin hora
+
+          var isValid = date.getFullYear() === year && 
+                       date.getMonth() === month - 1 && 
+                       date.getDate() === day &&
+                       day >= 1 && day <= 31 &&
+                       month >= 1 && month <= 12 &&
+                       year >= 2024 && year <= 2100 &&
+                       date >= today; // Verificar que la fecha no sea pasada
+
+          if (isValid) {
+            dateError.style.display = 'none';
+            weddingDateInput.style.borderColor = 'var(--gold)';
+          } else {
+            dateError.style.display = 'block';
+            weddingDateInput.style.borderColor = '#f44336';
+          }
+        } else {
+          dateError.style.display = 'block';
+          weddingDateInput.style.borderColor = '#f44336';
+        }
+      });
+
+      async function handleSubmit(event) {
+        event.preventDefault();
+        
+        // Validar fecha antes de enviar
+        var dateValue = weddingDateInput.value.trim();
+        if (dateValue !== '') {
+          var datePattern = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/;
+          var match = dateValue.match(datePattern);
+          
+          if (!match) {
+            dateError.style.display = 'block';
+            weddingDateInput.style.borderColor = '#f44336';
+            weddingDateInput.focus();
+            return;
+          }
+
+          var day = parseInt(match[1], 10);
+          var month = parseInt(match[2], 10);
+          var year = parseInt(match[3], 10);
+          var date = new Date(year, month - 1, day);
+          var today = new Date();
+          today.setHours(0, 0, 0, 0); // Comparar solo la fecha, sin hora
+
+          var isValid = date.getFullYear() === year && 
+                       date.getMonth() === month - 1 && 
+                       date.getDate() === day &&
+                       day >= 1 && day <= 31 &&
+                       month >= 1 && month <= 12 &&
+                       year >= 2024 && year <= 2100 &&
+                       date >= today; // Verificar que la fecha no sea pasada
+
+          if (!isValid) {
+            dateError.style.display = 'block';
+            weddingDateInput.style.borderColor = '#f44336';
+            weddingDateInput.focus();
+            return;
+          }
+        }
+
+        var data = new FormData(event.target);
+        fetch(event.target.action, {
+          method: form.method,
+          body: data,
+          headers: {
+              'Accept': 'application/json'
+          }
+        }).then(response => {
+          if (response.ok) {
+            status.innerHTML = "¡Gracias por tu mensaje! Te contactaremos pronto.";
+            status.style.color = "var(--gold)";
+            form.reset();
+            weddingDateInput.style.borderColor = '';
+            dateError.style.display = 'none';
+          } else {
+            response.json().then(data => {
+              if (Object.hasOwn(data, 'errors')) {
+                status.innerHTML = data["errors"].map(error => error["message"]).join(", ")
+              } else {
+                status.innerHTML = "Oops! Hubo un problema al enviar tu formulario.";
+                status.style.color = "red";
+              }
+            })
+          }
+        }).catch(error => {
+          status.innerHTML = "Oops! Hubo un problema al enviar tu formulario.";
+          status.style.color = "red";
+        });
+      }
+      form.addEventListener("submit", handleSubmit)
+    });
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nosotros - empresa Fotógrafos</title>
+    <link rel="stylesheet" href="../../css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        /* Hero Section */
+        .nosotros-hero {
+            height: 70vh;
+            background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), 
+                        url('https://images.unsplash.com/photo-1542038784456-1ea8e935640e?w=1600') center/cover;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: white;
+        }
+
+        .nosotros-hero h1 {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            font-weight: 700;
+            letter-spacing: 3px;
+        }
+
+        .nosotros-hero p {
+            font-size: 1.3rem;
+            color: var(--gold);
+            font-weight: 500;
+        }
+
+        /* Secciones */
+        .nosotros-section {
+            padding: 5rem 2rem;
+            background: var(--bg);
+        }
+
+        .nosotros-section.alt {
+            background: var(--card-bg);
+        }
+
+        .nosotros-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* Historia Section */
+        .historia-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            align-items: center;
+        }
+
+        .historia-text h2 {
+            font-size: 2.5rem;
+            color: var(--text-primary);
+            margin-bottom: 1.5rem;
+        }
+
+        .historia-text .highlight {
+            color: var(--gold);
+            font-weight: 600;
+        }
+
+        .historia-text p {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            line-height: 1.8;
+            margin-bottom: 1.5rem;
+        }
+
+        .historia-image {
+            width: 100%;
+            height: 500px;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+        }
+
+        .historia-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* Valores Section */
+        .valores-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2.5rem;
+            margin-top: 3rem;
+        }
+
+        .valor-card {
+            background: var(--bg);
+            padding: 2.5rem;
+            border-radius: 12px;
+            border: 1px solid #333;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .valor-card:hover {
+            transform: translateY(-10px);
+            border-color: var(--gold);
+            box-shadow: 0 8px 30px rgba(212, 175, 55, 0.2);
+        }
+
+        .valor-icon {
+            font-size: 3rem;
+            color: var(--gold);
+            margin-bottom: 1.5rem;
+        }
+
+        .valor-card h3 {
+            font-size: 1.5rem;
+            color: var(--text-primary);
+            margin-bottom: 1rem;
+        }
+
+        .valor-card p {
+            font-size: 1rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        /* Stats Section */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 3rem;
+            text-align: center;
+            margin-top: 3rem;
+        }
+
+        .stat-item {
+            padding: 2rem;
+        }
+
+        .stat-number {
+            font-size: 3.5rem;
+            font-weight: 700;
+            color: var(--gold);
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Por qué elegirnos */
+        .razones-list {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .razon-item {
+            display: flex;
+            gap: 1.5rem;
+            padding: 2rem;
+            background: var(--bg);
+            border-radius: 12px;
+            border: 1px solid #333;
+            transition: all 0.3s ease;
+        }
+
+        .razon-item:hover {
+            border-color: var(--gold);
+            transform: translateX(10px);
+        }
+
+        .razon-icon {
+            font-size: 2rem;
+            color: var(--gold);
+            min-width: 50px;
+        }
+
+        .razon-content h3 {
+            font-size: 1.3rem;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .razon-content p {
+            font-size: 1rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        /* CTA Final */
+        .nosotros-cta {
+            text-align: center;
+            padding: 5rem 2rem;
+            background: var(--card-bg);
+        }
+
+        .nosotros-cta h2 {
+            font-size: 2.5rem;
+            color: var(--text-primary);
+            margin-bottom: 1rem;
+        }
+
+        .nosotros-cta p {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .section-title {
+            font-size: 2.5rem;
+            color: var(--text-primary);
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+
+        .section-subtitle {
+            text-align: center;
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            max-width: 700px;
+            margin: 0 auto 3rem;
+            line-height: 1.8;
+        }
+
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .nosotros-hero h1 {
+                font-size: 3.5rem;
+            }
+
+            .nosotros-section {
+                padding: 4rem 1.5rem;
+            }
+
+            .valores-grid {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 2rem;
+            }
+        }
+
+        @media (max-width: 968px) {
+            .nosotros-hero {
+                height: 50vh;
+            }
+
+            .nosotros-hero h1 {
+                font-size: 2.5rem;
+            }
+
+            .nosotros-hero p {
+                font-size: 1.1rem;
+            }
+
+            .nosotros-section {
+                padding: 3rem 1.5rem;
+            }
+
+            .historia-content {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+            }
+
+            .historia-text h2 {
+                font-size: 2rem;
+            }
+
+            .historia-text p {
+                font-size: 1rem;
+            }
+
+            .historia-image {
+                height: 400px;
+            }
+
+            .valores-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 1.5rem;
+            }
+
+            .razones-list {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .section-title {
+                font-size: 2rem;
+            }
+
+            .nosotros-cta h2 {
+                font-size: 2rem;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .nosotros-hero {
+                height: 40vh;
+            }
+
+            .nosotros-hero h1 {
+                font-size: 2rem;
+                letter-spacing: 1px;
+            }
+
+            .nosotros-hero p {
+                font-size: 1rem;
+            }
+
+            .nosotros-section {
+                padding: 2.5rem 1rem;
+            }
+
+            .historia-text h2 {
+                font-size: 1.75rem;
+            }
+
+            .historia-image {
+                height: 300px;
+            }
+
+            .valores-grid {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+
+            .valor-card {
+                padding: 1.5rem;
+            }
+
+            .valor-icon {
+                font-size: 2.5rem;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stat-number {
+                font-size: 2.5rem;
+            }
+
+            .stat-label {
+                font-size: 0.95rem;
+            }
+
+            .razon-item {
+                padding: 1.5rem;
+                gap: 1rem;
+            }
+
+            .razon-icon {
+                font-size: 1.5rem;
+                min-width: 40px;
+            }
+
+            .razon-content h3 {
+                font-size: 1.1rem;
+            }
+
+            .nosotros-cta {
+                padding: 3rem 1.5rem;
+            }
+
+            .nosotros-cta h2 {
+                font-size: 1.75rem;
+            }
+
+            .nosotros-cta p {
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Skip to content link (accesibilidad) -->
+    <a href="#main-content" class="skip-to-content">Saltar al contenido principal</a>
+
+    <div data-include="../../components/header.html"></div>
+
+    <!-- Hero Section -->
+    <main id="main-content">
+    <section class="nosotros-hero">
+        <div>
+            <h1>Nosotros</h1>
+            <p>Capturando momentos, creando recuerdos eternos</p>
+        </div>
+    </section>
+
+    <!-- Nuestra Historia -->
+    <section class="nosotros-section">
+        <div class="nosotros-container">
+            <div class="historia-content">
+                <div class="historia-text">
+                    <h2>Nuestra Historia</h2>
+                    <p>
+                        <span class="highlight">Desde 2010</span>, hemos dedicado nuestra vida a capturar los momentos 
+                        más importantes de nuestros clientes. Lo que comenzó como una pasión se convirtió en una 
+                        misión: inmortalizar emociones, sonrisas y momentos únicos que durarán para siempre.
+                    </p>
+                    <p>
+                        Cada boda, cada celebración, cada sonrisa es única. Por eso, nuestro enfoque no es solo 
+                        técnico, sino profundamente humano. Nos tomamos el tiempo de conocerte, entender tu historia 
+                        y capturar la esencia de tu día especial.
+                    </p>
+                    <p>
+                        Con más de <span class="highlight">500 bodas fotografiadas</span> y miles de familias felices, 
+                        seguimos emocionándonos con cada proyecto como si fuera el primero.
+                    </p>
+                </div>
+                <div class="historia-image">
+                    <img src="https://images.unsplash.com/photo-1606216794074-735e91aa2c92?w=800" alt="Nuestra Historia">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Nuestros Valores -->
+    <section class="nosotros-section alt">
+        <div class="nosotros-container">
+            <h2 class="section-title">Nuestros Valores</h2>
+            <p class="section-subtitle">
+                Los principios que guían cada uno de nuestros trabajos y nos definen como profesionales.
+            </p>
+            
+            <div class="valores-grid">
+                <div class="valor-card">
+                    <div class="valor-icon">
+                        <i class="fas fa-heart"></i>
+                    </div>
+                    <h3>Pasión</h3>
+                    <p>
+                        Amamos lo que hacemos. Cada proyecto es una oportunidad de crear arte y 
+                        capturar la magia de los momentos especiales.
+                    </p>
+                </div>
+
+                <div class="valor-card">
+                    <div class="valor-icon">
+                        <i class="fas fa-star"></i>
+                    </div>
+                    <h3>Excelencia</h3>
+                    <p>
+                        Nos esforzamos por la perfección en cada detalle, desde la planificación 
+                        hasta la entrega final de tus recuerdos.
+                    </p>
+                </div>
+
+                <div class="valor-card">
+                    <div class="valor-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <h3>Cercanía</h3>
+                    <p>
+                        Creemos en las relaciones humanas. Te tratamos como familia, no como un 
+                        número más en nuestra agenda.
+                    </p>
+                </div>
+
+                <div class="valor-card">
+                    <div class="valor-icon">
+                        <i class="fas fa-lightbulb"></i>
+                    </div>
+                    <h3>Creatividad</h3>
+                    <p>
+                        Cada pareja es única, y así son sus fotos. Buscamos ángulos, momentos y 
+                        composiciones que cuenten tu historia de forma especial.
+                    </p>
+                </div>
+
+                <div class="valor-card">
+                    <div class="valor-icon">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <h3>Puntualidad</h3>
+                    <p>
+                        Respetamos tu tiempo y tus plazos. Nuestro compromiso es entregar tus 
+                        recuerdos cuando los esperabas.
+                    </p>
+                </div>
+
+                <div class="valor-card">
+                    <div class="valor-icon">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <h3>Confianza</h3>
+                    <p>
+                        Tu día es importante. Puedes confiar en que estaremos ahí, capturando 
+                        cada momento sin que tengas que preocuparte por nada.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Números que nos definen -->
+    <section class="nosotros-section">
+        <div class="nosotros-container">
+            <h2 class="section-title">Números que nos definen</h2>
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div class="stat-number">14+</div>
+                    <div class="stat-label">Años de Experiencia</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">500+</div>
+                    <div class="stat-label">Bodas Fotografiadas</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">100%</div>
+                    <div class="stat-label">Clientes Satisfechos</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">50K+</div>
+                    <div class="stat-label">Momentos Capturados</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Por qué elegirnos -->
+    <section class="nosotros-section alt">
+        <div class="nosotros-container">
+            <h2 class="section-title">¿Por qué elegirnos?</h2>
+            <p class="section-subtitle">
+                No somos solo fotógrafos, somos contadores de historias que se preocupan genuinamente 
+                por capturar la esencia de tu día especial.
+            </p>
+
+            <div class="razones-list">
+                <div class="razon-item">
+                    <div class="razon-icon">
+                        <i class="fas fa-camera-retro"></i>
+                    </div>
+                    <div class="razon-content">
+                        <h3>Equipo Profesional</h3>
+                        <p>
+                            Utilizamos el mejor equipo del mercado para garantizar la máxima calidad 
+                            en cada foto y video.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="razon-item">
+                    <div class="razon-icon">
+                        <i class="fas fa-palette"></i>
+                    </div>
+                    <div class="razon-content">
+                        <h3>Edición Personalizada</h3>
+                        <p>
+                            Cada imagen es cuidadosamente editada para reflejar tu estilo y 
+                            personalidad únicos.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="razon-item">
+                    <div class="razon-icon">
+                        <i class="fas fa-map-marked-alt"></i>
+                    </div>
+                    <div class="razon-content">
+                        <h3>Sin Límite de Desplazamiento</h3>
+                        <p>
+                            Nos desplazamos a cualquier lugar de España para capturar tu día especial, 
+                            sin costes adicionales.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="razon-item">
+                    <div class="razon-icon">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                    </div>
+                    <div class="razon-content">
+                        <h3>Galería Online Privada</h3>
+                        <p>
+                            Accede a tus fotos desde cualquier lugar con nuestra plataforma segura 
+                            y fácil de usar.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="razon-item">
+                    <div class="razon-icon">
+                        <i class="fas fa-handshake"></i>
+                    </div>
+                    <div class="razon-content">
+                        <h3>Trato Personalizado</h3>
+                        <p>
+                            Desde el primer contacto hasta la entrega final, estaremos contigo en 
+                            cada paso del camino.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="razon-item">
+                    <div class="razon-icon">
+                        <i class="fas fa-award"></i>
+                    </div>
+                    <div class="razon-content">
+                        <h3>Garantía de Calidad</h3>
+                        <p>
+                            Si no quedas satisfecho, trabajamos contigo hasta que lo estés. Tu 
+                            felicidad es nuestra prioridad.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Final -->
+    <section class="nosotros-cta">
+        <div class="nosotros-container">
+            <h2>¿Listo para capturar tus momentos especiales?</h2>
+            <p>
+                Estaremos encantados de conocerte y hablar sobre cómo podemos hacer de tu día 
+                algo inolvidable. Cuéntanos tu historia.
+            </p>
+            <a href="contacto.html" class="btn btn-primary">Contáctanos</a>
+        </div>
+    </section>
+    </main>
+
+    <div data-include="../../components/footer.html"></div>
+
+    <script src="../../js/include.js"></script>
+    <script src="../../js/mobile-menu.js"></script>
+</body>
+</html>

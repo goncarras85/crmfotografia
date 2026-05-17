@@ -1,0 +1,1842 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Área Privada</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="../../css/style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <script src="../../js/modals.js"></script>
+    <!-- Servicios de Backend - IMPORTANTE: Cargar en este orden -->
+    <script src="../../js/config.js" onerror="console.error('❌ Error cargando config.js');"></script>
+    <script src="../../js/auth.js" onerror="console.error('❌ Error cargando auth.js');"></script>
+    <script src="../../js/db.js" onerror="console.error('❌ Error cargando db.js');"></script>
+    <script src="../../js/gallery.js" onerror="console.error('❌ Error cargando gallery.js');"></script>
+    <script>
+        // Verificar que todos los scripts se carguen correctamente
+        const scriptsToCheck = [
+            '../../js/config.js',
+            '../../js/auth.js',
+            '../../js/db.js',
+            '../../js/gallery.js'
+        ];
+        
+        let scriptsLoaded = 0;
+        const totalScripts = scriptsToCheck.length;
+        
+        // Verificar carga de scripts
+        scriptsToCheck.forEach((src, index) => {
+            const script = document.querySelector(`script[src*="${src.split('/').pop()}"]`);
+            if (script) {
+                script.addEventListener('load', () => {
+                    scriptsLoaded++;
+                    console.log(`✅ Script ${index + 1}/${totalScripts} cargado: ${src.split('/').pop()}`);
+                });
+                script.addEventListener('error', () => {
+                    console.error(`❌ Error cargando script: ${src}`);
+                });
+            }
+        });
+        
+        // Verificar que todos los servicios estén inicializados
+        window.addEventListener('load', () => {
+            console.log('📦 Verificando servicios después de window.load...');
+            console.log('📊 Scripts cargados:', scriptsLoaded, '/', totalScripts);
+            
+            const services = {
+                CONFIG: !!window.CONFIG,
+                authService: !!window.authService,
+                dbService: !!window.dbService,
+                galleryService: !!window.galleryService
+            };
+            
+            console.log('✅ Servicios verificados:', services);
+            
+            // Si algún servicio falta, intentar recargar los scripts
+            if (!services.CONFIG || !services.authService || !services.dbService || !services.galleryService) {
+                console.warn('⚠️ Algunos servicios no están disponibles');
+                console.warn('Servicios faltantes:', Object.entries(services)
+                    .filter(([_, available]) => !available)
+                    .map(([name]) => name)
+                );
+            }
+        });
+        
+        // Verificar inmediatamente también
+        setTimeout(() => {
+            console.log('🔍 Verificación inmediata de servicios:', {
+                CONFIG: !!window.CONFIG,
+                authService: !!window.authService,
+                dbService: !!window.dbService,
+                galleryService: !!window.galleryService
+            });
+        }, 100);
+    </script>
+    <style>
+        /* Layout del Dashboard */
+        .dashboard-layout {
+            display: block;
+            min-height: 100vh;
+            background: var(--bg);
+        }
+
+        /* Selector de Categorías Desplegable */
+        .category-selector-wrapper {
+            background: var(--card-bg);
+            padding: 2rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .category-selector-container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .category-selector-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            padding: 1.25rem 1.5rem;
+            background: var(--bg);
+            border-radius: 12px;
+            border: 2px solid var(--border-color);
+            transition: all 0.3s ease;
+            user-select: none;
+        }
+
+        .category-selector-header:hover {
+            border-color: var(--gold);
+            background: rgba(212, 175, 55, 0.05);
+        }
+
+        .category-selector-header.active {
+            border-color: var(--gold);
+            border-bottom-left-radius: 0;
+            border-bottom-right-radius: 0;
+        }
+
+        .category-selector-current {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            flex: 1;
+        }
+
+        .category-selector-current i {
+            font-size: 1.4rem;
+            color: var(--gold);
+            width: 28px;
+            text-align: center;
+        }
+
+        .category-selector-current span {
+            font-weight: 700;
+            color: var(--text-primary);
+            font-size: 1.15rem;
+        }
+
+        .category-selector-arrow {
+            color: var(--gold);
+            transition: transform 0.3s ease;
+            font-size: 1.3rem;
+        }
+
+        .category-selector-header.active .category-selector-arrow {
+            transform: rotate(180deg);
+        }
+
+        /* Dropdown de categorías */
+        .category-dropdown {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s ease;
+            border: 2px solid var(--border-color);
+            border-top: none;
+            border-bottom-left-radius: 12px;
+            border-bottom-right-radius: 12px;
+            background: var(--bg);
+        }
+
+        .category-dropdown.active {
+            max-height: 500px;
+            overflow-y: auto;
+            border-color: var(--gold);
+        }
+
+        .category-list {
+            padding: 0.5rem 0;
+        }
+
+        .category-item {
+            padding: 1.1rem 1.5rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: var(--text-secondary);
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            border-left: 3px solid transparent;
+        }
+
+        .category-item i {
+            font-size: 1.1rem;
+            width: 22px;
+            text-align: center;
+        }
+
+        .category-item:hover {
+            background: rgba(212, 175, 55, 0.1);
+            color: var(--text-primary);
+            border-left-color: var(--gold);
+        }
+
+        .category-item.active {
+            background: rgba(212, 175, 55, 0.15);
+            border-left-color: var(--gold);
+            color: var(--gold);
+            font-weight: 600;
+        }
+
+        .category-item-count {
+            margin-left: auto;
+            color: var(--gold);
+            font-size: 0.85rem;
+            font-weight: 600;
+            padding: 0.25rem 0.6rem;
+            background: rgba(212, 175, 55, 0.15);
+            border-radius: 20px;
+        }
+
+        .logout-btn {
+            width: 100%;
+            margin-top: 1.5rem;
+            padding: 0.875rem 1.75rem;
+            background: var(--gold);
+            color: #ffffff;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            font-size: 1rem;
+            box-shadow: 0 2px 8px rgba(184, 148, 31, 0.3);
+        }
+
+        .logout-btn:hover {
+            background: #9a7a1a;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(184, 148, 31, 0.4);
+        }
+
+        .logout-btn:focus {
+            outline: 3px solid var(--gold);
+            outline-offset: 2px;
+        }
+
+        /* Contenido Principal */
+        .dashboard-main-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 3rem 2rem;
+            overflow-x: hidden;
+            min-height: 100vh;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .content-header {
+            margin-bottom: 2rem;
+        }
+
+        .content-header h1 {
+            color: var(--text-primary);
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .content-header p {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+
+        .content-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .category-info {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+
+        .category-info strong {
+            color: var(--gold);
+            font-size: 1.1rem;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .download-btn {
+            padding: 0.875rem 1.75rem;
+            background: var(--gold);
+            color: var(--bg);
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .download-btn:hover {
+            background: #c4961f;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3);
+        }
+
+        .download-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .download-btn.secondary {
+            background: transparent;
+            border: 1px solid var(--gold);
+            color: var(--gold);
+        }
+
+        .download-btn.secondary:hover {
+            background: rgba(212, 175, 55, 0.1);
+        }
+
+        /* Grid de Fotos */
+        .photos-grid {
+            display: grid !important;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)) !important;
+            gap: 1.5rem;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        
+        /* Asegurar que los elementos del grid no se expandan más de lo necesario */
+        .photos-grid > * {
+            min-width: 0;
+            max-width: 100%;
+        }
+
+        .photo-card {
+            background: var(--card-bg);
+            border-radius: 8px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            position: relative;
+            width: 100%;
+            max-width: 100%;
+            aspect-ratio: 1;
+            min-width: 0; /* Importante para que el grid funcione correctamente */
+        }
+
+        .photo-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+        }
+
+        .photo-card img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            cursor: pointer;
+        }
+
+        .photo-actions {
+            position: absolute;
+            top: 0.75rem;
+            right: 0.75rem;
+            display: flex;
+            gap: 0.5rem;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .photo-card:hover .photo-actions {
+            opacity: 1;
+        }
+
+        .photo-action-btn {
+            width: 36px;
+            height: 36px;
+            background: rgba(0,0,0,0.7);
+            border: none;
+            border-radius: 50%;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(10px);
+        }
+
+        .photo-action-btn:hover {
+            background: var(--gold);
+            color: var(--bg);
+            transform: scale(1.1);
+        }
+
+        .photo-action-btn.favorite.active {
+            background: #f44336;
+            color: white;
+        }
+
+        .photo-action-btn.favorite.active:hover {
+            background: #d32f2f;
+        }
+
+        .photo-info {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
+            padding: 1rem;
+            transform: translateY(100%);
+            transition: transform 0.3s ease;
+        }
+
+        .photo-card:hover .photo-info {
+            transform: translateY(0);
+        }
+
+        .photo-category-tag {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            background: var(--gold);
+            color: var(--bg);
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: var(--text-secondary);
+        }
+
+        .empty-state i {
+            font-size: 4rem;
+            color: var(--gold);
+            margin-bottom: 1.5rem;
+        }
+
+        .empty-state h3 {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+        }
+
+        /* Lightbox */
+        #lightbox {
+            display: none;
+            position: fixed;
+            z-index: 10000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.95);
+            align-items: center;
+            justify-content: center;
+        }
+
+        #lightbox.visible {
+            display: flex;
+        }
+
+        #lightbox img {
+            max-width: 90%;
+            max-height: 90vh;
+            object-fit: contain;
+        }
+
+        #lightbox .close-btn {
+            position: absolute;
+            top: 2rem;
+            right: 2rem;
+            font-size: 2.5rem;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            z-index: 10001;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 50%;
+        }
+
+        #lightbox .close-btn:hover {
+            color: var(--gold);
+            transform: rotate(90deg);
+            background: rgba(0, 0, 0, 0.8);
+        }
+
+        #lightbox .lightbox-prev,
+        #lightbox .lightbox-next {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            transition: all 0.3s ease;
+            z-index: 10001;
+        }
+
+        #lightbox .lightbox-prev {
+            left: 2rem;
+        }
+
+        #lightbox .lightbox-next {
+            right: 2rem;
+        }
+
+        #lightbox .lightbox-prev:hover,
+        #lightbox .lightbox-next:hover {
+            background: rgba(0, 0, 0, 0.8);
+            color: var(--gold);
+            transform: translateY(-50%) scale(1.1);
+        }
+
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .photos-grid {
+                grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)) !important;
+            }
+        }
+
+        @media (max-width: 968px) {
+            .category-selector-wrapper {
+                padding: 1.5rem 1rem;
+            }
+
+            .category-selector-header {
+                padding: 1rem 1.25rem;
+            }
+
+            .category-selector-current span {
+                font-size: 1rem;
+            }
+
+            .category-item {
+                padding: 0.9rem 1.25rem;
+                font-size: 0.95rem;
+            }
+
+            .logout-btn {
+                padding: 0.75rem 1.25rem;
+                font-size: 0.9rem;
+                margin-top: 1.25rem;
+            }
+
+            .dashboard-main-content {
+                padding: 2rem 1.5rem;
+            }
+
+            .content-header h1 {
+                font-size: 1.75rem;
+            }
+
+            .photos-grid {
+                grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)) !important;
+                gap: 1rem;
+            }
+
+            .download-btn {
+                padding: 0.75rem 1.25rem;
+                font-size: 0.9rem;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .category-selector-wrapper {
+                padding: 1rem;
+            }
+
+            .category-selector-header {
+                padding: 0.875rem 1rem;
+            }
+
+            .category-selector-current span {
+                font-size: 0.95rem;
+            }
+
+            .category-selector-current i {
+                font-size: 1.1rem;
+            }
+
+            .category-dropdown.active {
+                max-height: 400px;
+            }
+
+            .category-item {
+                padding: 0.8rem 1rem;
+                font-size: 0.9rem;
+            }
+
+            .logout-btn {
+                padding: 0.75rem;
+                font-size: 0.9rem;
+                margin-top: 1rem;
+            }
+
+            .dashboard-main-content {
+                padding: 1.5rem 1rem;
+            }
+
+            .content-header h1 {
+                font-size: 1.25rem;
+            }
+
+            .content-header p {
+                font-size: 0.85rem;
+            }
+
+            .content-actions {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .action-buttons {
+                width: 100%;
+            }
+
+            .download-btn {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .photos-grid {
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)) !important;
+                gap: 1rem;
+            }
+        }
+
+        /* Ocultar footer en dashboard cliente */
+        .main-footer {
+            display: none;
+        }
+
+        /* Header: ocultar dropdown */
+        .dashboard-navbar .profile-dropdown-menu {
+            display: none !important;
+        }
+
+        .dashboard-navbar .user-name i {
+            display: none !important;
+        }
+
+        .dashboard-navbar .user-info {
+            cursor: default !important;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header oculto para clientes -->
+
+    <div class="dashboard-layout">
+        <!-- Selector de Categorías Desplegable -->
+        <div class="category-selector-wrapper">
+            <div class="category-selector-container">
+                <div class="category-selector-header" id="categorySelector" role="button" aria-label="Seleccionar categoría de fotos" aria-expanded="false" aria-haspopup="true" tabindex="0">
+                    <div class="category-selector-current">
+                        <i class="fas fa-th" id="currentCategoryIcon" aria-hidden="true"></i>
+                        <span id="currentCategoryName">Todas las Fotos</span>
+                    </div>
+                    <i class="fas fa-chevron-down category-selector-arrow" aria-hidden="true"></i>
+                </div>
+                <div class="category-dropdown" id="categoryDropdown" role="menu" aria-label="Menú de categorías">
+                    <div class="category-list" id="categoryList">
+                        <!-- Las categorías se generarán dinámicamente -->
+                    </div>
+                </div>
+                
+                <button class="logout-btn" id="logoutBtn" aria-label="Cerrar sesión y salir del área de cliente">
+                    <i class="fas fa-sign-out-alt" aria-hidden="true"></i>
+                    Cerrar Sesión
+                </button>
+            </div>
+        </div>
+
+        <!-- Contenido Principal -->
+        <main class="dashboard-main-content">
+            <div class="content-header">
+                <h1 id="galleryTitle">Mi Galería</h1>
+                <p id="galleryDate">Galería creada el ...</p>
+            </div>
+
+            <div class="content-actions" id="contentActions" role="toolbar" aria-label="Acciones de galería">
+                <!-- Botón de descargar todo aparecerá aquí -->
+            </div>
+
+            <div class="photos-grid" id="photosGrid">
+                <!-- Indicador de carga inicial -->
+                <div id="loadingIndicator" style="text-align: center; padding: 3rem; color: var(--text-secondary);">
+                    <i class="fas fa-spinner fa-spin" style="font-size: 2rem; margin-bottom: 1rem; color: var(--gold);"></i>
+                    <p>Cargando galería...</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Lightbox -->
+    <div id="lightbox">
+        <span class="close-btn">&times;</span>
+        <button class="lightbox-prev" aria-label="Foto anterior">
+            <i class="fas fa-chevron-left"></i>
+        </button>
+        <button class="lightbox-next" aria-label="Foto siguiente">
+            <i class="fas fa-chevron-right"></i>
+        </button>
+        <img src="" alt="Imagen ampliada">
+    </div>
+
+    <script>
+        // Log inicial para verificar que el script se carga
+        console.log('🚀 dashboard-cliente.html: Script iniciado');
+        
+        document.addEventListener('DOMContentLoaded', async () => {
+            console.log('📄 DOMContentLoaded ejecutado');
+            
+            try {
+                // Verificar que los servicios estén cargados
+                console.log('🔍 Verificando servicios...', {
+                    CONFIG: !!window.CONFIG,
+                    authService: !!window.authService,
+                    dbService: !!window.dbService,
+                    galleryService: !!window.galleryService
+                });
+                
+                // Esperar a que los scripts se carguen (móviles pueden ser más lentos)
+                let attempts = 0;
+                const maxAttempts = 5;
+                
+                while (attempts < maxAttempts && (!window.authService || !window.dbService || !window.galleryService || !window.CONFIG)) {
+                    attempts++;
+                    console.log(`🔍 Intento ${attempts}/${maxAttempts} - Verificando servicios...`, {
+                        CONFIG: !!window.CONFIG,
+                        authService: !!window.authService,
+                        dbService: !!window.dbService,
+                        galleryService: !!window.galleryService
+                    });
+                    
+                    if (attempts < maxAttempts) {
+                        await new Promise(resolve => setTimeout(resolve, 500));
+                    }
+                }
+                
+                if (!window.authService || !window.dbService || !window.galleryService || !window.CONFIG) {
+                    const missing = [];
+                    if (!window.CONFIG) missing.push('CONFIG');
+                    if (!window.authService) missing.push('authService');
+                    if (!window.dbService) missing.push('dbService');
+                    if (!window.galleryService) missing.push('galleryService');
+                    
+                    // Verificar rutas de los scripts
+                    const scriptErrors = [];
+                    const scripts = document.querySelectorAll('script[src*="../../js/"]');
+                    scripts.forEach(script => {
+                        const src = script.getAttribute('src');
+                        scriptErrors.push(`<li>${src}</li>`);
+                    });
+                    
+                    const errorMsg = `
+                        <div style="padding: 2rem; text-align: center; max-width: 600px; margin: 2rem auto;">
+                            <h2 style="color: var(--error); margin-bottom: 1rem;">⚠️ Error al cargar la página</h2>
+                            <p style="margin-bottom: 1rem;">Los siguientes servicios no se han cargado:</p>
+                            <ul style="text-align: left; display: inline-block; margin-bottom: 1.5rem;">
+                                ${missing.map(m => `<li><strong>${m}</strong></li>`).join('')}
+                            </ul>
+                            <p style="margin-bottom: 1rem;">Scripts intentados:</p>
+                            <ul style="text-align: left; display: inline-block; margin-bottom: 1.5rem; font-size: 0.85rem;">
+                                ${scriptErrors.join('')}
+                            </ul>
+                            <p style="margin-bottom: 1rem; font-size: 0.9rem; color: #666;">Posibles causas:</p>
+                            <ul style="text-align: left; display: inline-block; margin-bottom: 1.5rem; font-size: 0.9rem;">
+                                <li>Los archivos JavaScript no se cargaron</li>
+                                <li>Problema de conexión o red lenta</li>
+                                <li>Error en las rutas de los archivos</li>
+                                <li>El servidor no está sirviendo los archivos correctamente</li>
+                            </ul>
+                            <button onclick="location.reload()" style="margin-top: 1rem; padding: 0.75rem 1.5rem; background: var(--gold); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 1rem;">
+                                🔄 Recargar Página
+                            </button>
+                        </div>
+                    `;
+                    
+                    if (document.body) {
+                        document.body.innerHTML = errorMsg;
+                    } else {
+                        document.write(errorMsg);
+                    }
+                    return;
+                }
+                
+                console.log('✅ Todos los servicios están disponibles');
+
+                console.log('🔍 Buscando elementos del DOM...');
+                
+                const categoryList = document.getElementById('categoryList');
+                const photosGrid = document.getElementById('photosGrid');
+                const contentActions = document.getElementById('contentActions');
+                const galleryTitle = document.getElementById('galleryTitle');
+                const galleryDate = document.getElementById('galleryDate');
+                const lightbox = document.getElementById('lightbox');
+                const lightboxImg = lightbox ? lightbox.querySelector('img') : null;
+                const closeLightbox = lightbox ? lightbox.querySelector('.close-btn') : null;
+                const logoutBtn = document.getElementById('logoutBtn');
+                const categorySelector = document.getElementById('categorySelector');
+                const categoryDropdown = document.getElementById('categoryDropdown');
+
+                console.log('📋 Elementos encontrados:', {
+                    categoryList: !!categoryList,
+                    photosGrid: !!photosGrid,
+                    contentActions: !!contentActions,
+                    galleryTitle: !!galleryTitle,
+                    galleryDate: !!galleryDate,
+                    lightbox: !!lightbox,
+                    logoutBtn: !!logoutBtn,
+                    categorySelector: !!categorySelector,
+                    categoryDropdown: !!categoryDropdown
+                });
+
+                if (!categorySelector || !categoryDropdown || !photosGrid) {
+                    const missing = [];
+                    if (!categorySelector) missing.push('categorySelector');
+                    if (!categoryDropdown) missing.push('categoryDropdown');
+                    if (!photosGrid) missing.push('photosGrid');
+                    
+                    console.error('❌ Elementos del DOM no encontrados:', missing);
+                    if (photosGrid) {
+                        photosGrid.innerHTML = `
+                            <div class="empty-state">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                <h3>Error de carga</h3>
+                                <p>No se encontraron elementos necesarios: ${missing.join(', ')}</p>
+                                <button onclick="location.reload()" style="margin-top: 1rem; padding: 0.75rem 1.5rem; background: var(--gold); color: white; border: none; border-radius: 8px; cursor: pointer;">
+                                    Recargar
+                                </button>
+                            </div>
+                        `;
+                    }
+                    return;
+                }
+                
+                console.log('✅ Todos los elementos del DOM encontrados');
+
+                let currentCategory = 'all';
+                let clientData = null;
+                let allPhotos = {};
+                let favorites = [];
+
+                // Toggle del dropdown de categorías
+                categorySelector.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const isActive = categorySelector.classList.contains('active');
+                    categorySelector.classList.toggle('active');
+                    categoryDropdown.classList.toggle('active');
+                    categorySelector.setAttribute('aria-expanded', !isActive);
+                });
+
+                // Soporte de teclado para el selector
+                categorySelector.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        categorySelector.click();
+                    }
+                });
+
+                // Cerrar dropdown al hacer clic fuera
+                document.addEventListener('click', (e) => {
+                    if (!categorySelector.contains(e.target) && !categoryDropdown.contains(e.target)) {
+                        categorySelector.classList.remove('active');
+                        categoryDropdown.classList.remove('active');
+                    }
+                });
+
+                // --- Verificar autenticación ---
+                console.log('🔐 Verificando autenticación...');
+                
+                // IMPORTANTE: Primero verificar la sesión para inicializar currentUser
+                const session = await window.authService.checkSession();
+                console.log('📋 Sesión verificada:', session ? 'Sesión encontrada' : 'Sin sesión');
+                
+                if (!session) {
+                    console.warn('⚠️ No hay sesión - redirigiendo a login');
+                    window.location.href = 'area-clientes.html';
+                    return;
+                }
+                
+                // Ahora verificar que el tipo de usuario sea correcto
+                const user = window.authService.getCurrentUser();
+                console.log('👤 Usuario actual:', user ? `${user.email} (${user.type})` : 'No hay usuario');
+                
+                if (!user || user.type !== 'client') {
+                    console.warn('⚠️ Usuario no es cliente o no existe - redirigiendo a login');
+                    window.location.href = 'area-clientes.html';
+                    return;
+                }
+                
+                console.log('✅ Usuario autenticado:', user.email);
+
+            // --- Protección contra botón "atrás" ---
+            history.pushState(null, '', window.location.href);
+            window.addEventListener('popstate', function(event) {
+                window.authService.logout();
+            });
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const accessCode = urlParams.get('key') || user.accessCode;
+
+            // Verificar que el usuario logueado sea el dueño de esta galería
+            if (user.accessCode !== accessCode) {
+                photosGrid.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-ban"></i>
+                        <h3>Acceso Denegado</h3>
+                        <p>No tienes permiso para ver esta galería.</p>
+                    </div>`;
+                return;
+            }
+
+            // --- Obtener datos del cliente ---
+            let client = null;
+            if (CONFIG.useDemoMode()) {
+                const clients = JSON.parse(localStorage.getItem('clients') || '[]');
+                client = clients.find(c => c.accessCode === accessCode);
+            } else {
+                const result = await window.dbService.getClientByAccessCode(accessCode);
+                if (result.success && result.data) {
+                    client = {
+                        id: result.data.id,
+                        username: result.data.username,
+                        email: result.data.email,
+                        accessCode: result.data.access_code,
+                        createdAt: result.data.created_at
+                    };
+                }
+            }
+
+            if (!client) {
+                photosGrid.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <h3>Error</h3>
+                        <p>No se encontró la galería. Por favor, contacta con tu fotógrafo.</p>
+                    </div>`;
+                return;
+            }
+
+            clientData = client;
+
+            // --- Actualizar título de la página ---
+            document.title = `Área Privada - ${client.username}`;
+
+            // --- Actualizar título y fecha ---
+            galleryTitle.textContent = client.username;
+            const eventDate = new Date(client.createdAt).toLocaleDateString('es-ES', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+            galleryDate.textContent = `Galería creada el ${eventDate}`;
+
+            // --- Cargar favoritos ---
+            window.galleryService.loadFavorites(accessCode);
+            favorites = window.galleryService.favorites;
+
+            // --- Cargar fotos usando galleryService ---
+            console.log('📸 Cargando fotos...');
+            const clientId = CONFIG.useDemoMode() ? accessCode : client.id;
+            console.log('🆔 Client ID:', clientId, 'Access Code:', accessCode);
+            
+            const photosResult = await window.galleryService.loadClientPhotos(clientId, accessCode);
+            console.log('📸 Resultado de carga de fotos:', photosResult);
+            
+            if (photosResult.success) {
+                allPhotos = photosResult.data;
+                const categoryCount = Object.keys(allPhotos).length;
+                const totalPhotos = Object.values(allPhotos).flat().length;
+                console.log(`✅ Fotos cargadas: ${categoryCount} categorías, ${totalPhotos} fotos en total`);
+            } else {
+                allPhotos = {};
+                console.warn('⚠️ No se encontraron fotos:', photosResult.message || 'Sin mensaje');
+            }
+
+            // --- Renderizar categorías en el sidebar ---
+            function renderCategories() {
+                // Calcular total de fotos (manejar objetos y strings)
+                const totalPhotos = Object.values(allPhotos).flat().length;
+                
+                let categoriesHtml = `
+                    <div class="category-item active" data-category="all" data-icon="fas fa-th" data-name="Todas las Fotos">
+                        <i class="fas fa-th"></i>
+                        <span>Todas</span>
+                        <span class="category-item-count">${totalPhotos}</span>
+                    </div>`;
+
+                // Categoría de favoritos (siempre visible)
+                // Contar solo los favoritos que realmente existen en las fotos cargadas
+                const allPhotoUrls = new Set();
+                Object.values(allPhotos).forEach(categoryPhotos => {
+                    categoryPhotos.forEach(photo => {
+                        const photoUrl = typeof photo === 'string' ? photo : photo.r2_url || photo.url || photo;
+                        if (photoUrl) allPhotoUrls.add(photoUrl);
+                    });
+                });
+                
+                const validFavoritesCount = favorites.filter(fav => {
+                    const favUrl = typeof fav === 'string' ? fav : fav.r2_url || fav.url || fav;
+                    return favUrl && allPhotoUrls.has(favUrl);
+                }).length;
+                
+                categoriesHtml += `
+                    <div class="category-item" data-category="favorites" data-icon="fas fa-heart" data-name="Favoritos">
+                        <i class="fas fa-heart"></i>
+                        <span>Favoritos</span>
+                        <span class="category-item-count">${validFavoritesCount}</span>
+                    </div>`;
+
+                // Obtener categorías: primero del cliente (de la sesión), luego de las fotos
+                const session = window.authService.getCurrentUser();
+                const clientCategories = session && session.categories ? session.categories : [];
+                const photoCategories = Object.keys(allPhotos);
+                
+                // Combinar categorías del cliente con categorías de fotos (sin duplicados)
+                const allCategories = Array.from(new Set([...clientCategories, ...photoCategories]));
+                
+                // Ordenar categorías: primero las que tienen fotos, luego las del cliente
+                allCategories.sort((a, b) => {
+                    const aHasPhotos = photoCategories.includes(a);
+                    const bHasPhotos = photoCategories.includes(b);
+                    if (aHasPhotos && !bHasPhotos) return -1;
+                    if (!aHasPhotos && bHasPhotos) return 1;
+                    return a.localeCompare(b);
+                });
+                
+                allCategories.forEach(categoryName => {
+                    const photoCount = (allPhotos[categoryName] || []).length;
+                    categoriesHtml += `
+                        <div class="category-item" data-category="${categoryName}" data-icon="fas fa-folder" data-name="${categoryName}">
+                            <i class="fas fa-folder"></i>
+                            <span>${categoryName}</span>
+                            <span class="category-item-count">${photoCount}</span>
+                        </div>`;
+                });
+
+                categoryList.innerHTML = categoriesHtml;
+
+                // Añadir listeners a las categorías
+                categoryList.querySelectorAll('.category-item').forEach(item => {
+                    item.addEventListener('click', () => {
+                        const category = item.dataset.category;
+                        const icon = item.dataset.icon;
+                        const name = item.dataset.name;
+                        selectCategory(category, icon, name);
+                        
+                        // Cerrar el dropdown
+                        categoryDropdown.classList.remove('active');
+                        categorySelector.classList.remove('active');
+                    });
+                });
+            }
+
+            // --- Seleccionar categoría ---
+            function selectCategory(category, icon = 'fas fa-th', name = 'Todas las Fotos') {
+                currentCategory = category;
+
+                // Actualizar el selector desplegable
+                document.getElementById('currentCategoryIcon').className = icon;
+                document.getElementById('currentCategoryName').textContent = name;
+
+                // Actualizar categoría activa en la lista
+                categoryList.querySelectorAll('.category-item').forEach(item => {
+                    item.classList.remove('active');
+                });
+                const activeItem = categoryList.querySelector(`[data-category="${category}"]`);
+                if (activeItem) {
+                    activeItem.classList.add('active');
+                }
+
+                // Calcular número de fotos para esta categoría
+                let photoCount = 0;
+                if (category === 'all') {
+                    // Contar todas las fotos de todas las categorías
+                    photoCount = Object.values(allPhotos).flat().length;
+                } else if (category === 'favorites') {
+                    // Contar solo los favoritos que realmente existen en las fotos cargadas
+                    // Normalizar URLs para comparación
+                    const allPhotoUrls = new Set();
+                    Object.values(allPhotos).forEach(categoryPhotos => {
+                        categoryPhotos.forEach(photo => {
+                            const photoUrl = typeof photo === 'string' ? photo : photo.r2_url || photo.url || photo;
+                            if (photoUrl) allPhotoUrls.add(photoUrl);
+                        });
+                    });
+                    
+                    // Contar solo favoritos que existen en las fotos
+                    photoCount = favorites.filter(fav => {
+                        const favUrl = typeof fav === 'string' ? fav : fav.r2_url || fav.url || fav;
+                        return allPhotoUrls.has(favUrl);
+                    }).length;
+                } else {
+                    // Contar fotos de la categoría específica
+                    photoCount = (allPhotos[category] || []).length;
+                }
+
+                // Renderizar fotos de la categoría usando galleryService
+                window.galleryService.renderGallery(photosGrid, category, {
+                    enableLightbox: true,
+                    enableFavorites: true,
+                    columns: 3,
+                    gap: '1rem'
+                });
+                
+                // Añadir listeners después de renderizar
+                setTimeout(() => {
+                    addPhotoListeners();
+                }, 100);
+
+                // Actualizar contador de fotos en contentActions
+                let categoryText = 'en total';
+                let downloadText = 'Todas';
+                
+                if (category === 'favorites') {
+                    categoryText = 'favoritas';
+                    downloadText = 'Favoritos';
+                } else if (category !== 'all') {
+                    categoryText = 'en ' + category;
+                    downloadText = 'Categoría';
+                }
+
+                // Actualizar el contador solo si hay fotos
+                if (photoCount > 0) {
+                    contentActions.innerHTML = `
+                        <div class="category-info">
+                            <strong>${photoCount}</strong> foto${photoCount !== 1 ? 's' : ''} ${categoryText}
+                        </div>
+                        <div class="action-buttons">
+                            <button class="download-btn secondary" id="downloadCategoryBtn">
+                                <i class="fas fa-download"></i>
+                                Descargar ${downloadText}
+                            </button>
+                        </div>`;
+                    
+                    // Añadir listener al botón de descarga
+                    const downloadCategoryBtn = document.getElementById('downloadCategoryBtn');
+                    if (downloadCategoryBtn) {
+                        // Remover listener anterior si existe
+                        downloadCategoryBtn.replaceWith(downloadCategoryBtn.cloneNode(true));
+                        const newDownloadBtn = document.getElementById('downloadCategoryBtn');
+                        newDownloadBtn.addEventListener('click', () => {
+                            downloadCategory(currentCategory);
+                        });
+                    }
+                } else {
+                    contentActions.innerHTML = '';
+                }
+            }
+
+            // --- Renderizar fotos (usando galleryService) ---
+            function renderPhotos(category) {
+                // Esta función ya no se usa, se usa galleryService.renderGallery directamente
+                // Pero la mantenemos por compatibilidad
+                let photosToShow = [];
+
+                if (category === 'all') {
+                    // Mostrar todas las fotos
+                    Object.keys(allPhotos).forEach(cat => {
+                        const categoryPhotos = allPhotos[cat] || [];
+                        categoryPhotos.forEach(photo => {
+                            // photo puede ser un string (URL) o un objeto {id, r2_url, r2_key}
+                            const photoUrl = typeof photo === 'string' ? photo : photo.r2_url || photo.url || photo;
+                            photosToShow.push({ url: photoUrl, category: cat });
+                        });
+                    });
+                } else if (category === 'favorites') {
+                    // Mostrar solo favoritos
+                    Object.keys(allPhotos).forEach(cat => {
+                        const categoryPhotos = allPhotos[cat] || [];
+                        categoryPhotos.forEach(photo => {
+                            // photo puede ser un string (URL) o un objeto {id, r2_url, r2_key}
+                            const photoUrl = typeof photo === 'string' ? photo : photo.r2_url || photo.url || photo;
+                            if (favorites.includes(photoUrl)) {
+                                photosToShow.push({ url: photoUrl, category: cat });
+                            }
+                        });
+                    });
+                } else {
+                    // Mostrar solo fotos de la categoría seleccionada
+                    const categoryPhotos = allPhotos[category] || [];
+                    categoryPhotos.forEach(photo => {
+                        // photo puede ser un string (URL) o un objeto {id, r2_url, r2_key}
+                        const photoUrl = typeof photo === 'string' ? photo : photo.r2_url || photo.url || photo;
+                        photosToShow.push({ url: photoUrl, category: category });
+                    });
+                }
+
+                // Renderizar grid
+                if (photosToShow.length === 0) {
+                    photosGrid.innerHTML = `
+                        <div class="empty-state">
+                            <i class="fas fa-images"></i>
+                            <h3>No hay fotos disponibles</h3>
+                            <p>${category === 'all' ? 'Tu fotógrafo subirá las imágenes pronto. ¡Ten paciencia!' : 'No hay fotos en esta categoría aún.'}</p>
+                        </div>`;
+                    contentActions.innerHTML = '';
+                } else {
+                    let photosHtml = '';
+                    photosToShow.forEach((photo, index) => {
+                        // photo.url puede ser un objeto, extraer la URL real
+                        const photoUrl = typeof photo.url === 'string' ? photo.url : photo.url?.r2_url || photo.url?.url || photo.url;
+                        const isFavorite = favorites.includes(photoUrl);
+                        photosHtml += `
+                            <div class="photo-card" style="width: 100%; max-width: 100%;">
+                                <img src="${photoUrl}" alt="Fotografía de ${photo.category}, imagen número ${index + 1}" loading="lazy" data-src="${photoUrl}">
+                                <div class="photo-actions">
+                                    <button class="photo-action-btn favorite ${isFavorite ? 'active' : ''}" data-url="${photoUrl}" title="${isFavorite ? 'Quitar de favoritos' : 'Añadir a favoritos'}" aria-label="${isFavorite ? 'Quitar de favoritos' : 'Añadir a favoritos'}">
+                                        <i class="fas fa-heart" aria-hidden="true"></i>
+                                    </button>
+                                    <button class="photo-action-btn download" data-url="${photoUrl}" title="Descargar foto" aria-label="Descargar esta fotografía">
+                                        <i class="fas fa-download" aria-hidden="true"></i>
+                                    </button>
+                                </div>
+                                <div class="photo-info">
+                                    <span class="photo-category-tag">${photo.category}</span>
+                                </div>
+                            </div>`;
+                    });
+                    // Asegurar que el grid se aplique correctamente
+                    photosGrid.style.display = 'grid';
+                    photosGrid.style.gridTemplateColumns = 'repeat(auto-fill, minmax(250px, 1fr))';
+                    photosGrid.innerHTML = photosHtml;
+
+                    // Mostrar botones de acción
+                    let categoryText = 'en total';
+                    let downloadText = 'Todas';
+                    
+                    if (category === 'favorites') {
+                        categoryText = 'favoritas';
+                        downloadText = 'Favoritos';
+                    } else if (category !== 'all') {
+                        categoryText = 'en ' + category;
+                        downloadText = 'Categoría';
+                    }
+
+                    contentActions.innerHTML = `
+                        <div class="category-info">
+                            <strong>${photosToShow.length}</strong> foto${photosToShow.length !== 1 ? 's' : ''} ${categoryText}
+                        </div>
+                        <div class="action-buttons">
+                            <button class="download-btn secondary" id="downloadCategoryBtn">
+                                <i class="fas fa-download"></i>
+                                Descargar ${downloadText}
+                            </button>
+                        </div>`;
+
+                    // Añadir listeners
+                    addPhotoListeners();
+                }
+            }
+
+            // --- Añadir listeners a las fotos ---
+            function addPhotoListeners() {
+                // Click en imagen para lightbox
+                // Obtener todas las imágenes visibles para navegación
+                const allImages = Array.from(photosGrid.querySelectorAll('.photo-card img, .gallery-item img'));
+                allImages.forEach((img, index) => {
+                    // No clonar la imagen, solo añadir el listener (evita problemas con botones)
+                    img.addEventListener('click', (e) => {
+                        // No abrir lightbox si se hace click en un botón
+                        if (e.target.closest('.photo-action-btn')) {
+                            return;
+                        }
+                        
+                        e.stopPropagation();
+                        const photoUrl = img.src || img.dataset.src || img.getAttribute('src');
+                        
+                        if (photoUrl && lightbox && lightboxImg) {
+                            // Guardar todas las URLs para navegación
+                            const allPhotoUrls = allImages.map(i => i.src || i.dataset.src || i.getAttribute('src')).filter(Boolean);
+                            lightbox.dataset.allPhotos = JSON.stringify(allPhotoUrls);
+                            lightbox.dataset.currentIndex = index;
+                            
+                            // Mostrar imagen
+                            lightboxImg.src = photoUrl;
+                            lightbox.classList.add('visible');
+                            document.body.style.overflow = 'hidden';
+                        }
+                    });
+                });
+
+                // Botones de favorito
+                photosGrid.querySelectorAll('.photo-action-btn.favorite').forEach(btn => {
+                    // Remover listener anterior si existe
+                    const newBtn = btn.cloneNode(true);
+                    btn.parentNode.replaceChild(newBtn, btn);
+                    
+                    newBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        console.log('❤️ Click en favorito:', newBtn.dataset.url);
+                        toggleFavorite(newBtn.dataset.url, newBtn);
+                    });
+                });
+
+                // Botones de descarga individual
+                photosGrid.querySelectorAll('.photo-action-btn.download').forEach(btn => {
+                    // Remover listener anterior si existe
+                    const newBtn = btn.cloneNode(true);
+                    btn.parentNode.replaceChild(newBtn, btn);
+                    
+                    newBtn.addEventListener('click', async (e) => {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        console.log('📥 Click en botón de descarga:', newBtn.dataset.url);
+                        await downloadPhoto(newBtn.dataset.url);
+                    });
+                });
+
+                // Botón de descargar categoría
+                const downloadCategoryBtn = document.getElementById('downloadCategoryBtn');
+                if (downloadCategoryBtn) {
+                    downloadCategoryBtn.addEventListener('click', () => {
+                        downloadCategory(currentCategory);
+                    });
+                }
+            }
+
+            // --- Toggle Favorito ---
+            function toggleFavorite(photoUrl, btn) {
+                console.log('🔄 toggleFavorite llamado con:', photoUrl);
+                
+                // photoUrl puede ser un string o un objeto, normalizar a string
+                const url = typeof photoUrl === 'string' ? photoUrl : photoUrl.r2_url || photoUrl.url || photoUrl;
+                
+                if (!url) {
+                    console.error('❌ URL inválida en toggleFavorite:', photoUrl);
+                    return;
+                }
+                
+                const index = favorites.indexOf(url);
+                if (index > -1) {
+                    favorites.splice(index, 1);
+                    btn.classList.remove('active');
+                    console.log('❌ Favorito eliminado:', url);
+                } else {
+                    favorites.push(url);
+                    btn.classList.add('active');
+                    console.log('✅ Favorito añadido:', url);
+                }
+                
+                // Guardar en localStorage
+                localStorage.setItem(`favorites_${client.accessCode}`, JSON.stringify(favorites));
+                
+                // Actualizar galleryService
+                if (window.galleryService) {
+                    window.galleryService.favorites = favorites;
+                }
+                
+                // Actualizar sidebar para reflejar cambios en favoritos
+                renderCategories();
+                
+                // Si estamos en la vista de favoritos, actualizar la vista
+                if (currentCategory === 'favorites') {
+                    selectCategory('favorites', 'fas fa-heart', 'Favoritos');
+                }
+            }
+
+            // --- Descargar foto individual ---
+            async function downloadPhoto(photoUrl) {
+                console.log('📥 downloadPhoto llamado con:', photoUrl);
+                // Normalizar URL
+                let url = typeof photoUrl === 'string' ? photoUrl : photoUrl.r2_url || photoUrl.url || photoUrl;
+                
+                if (!url || url === 'null' || url === 'undefined' || url === '[object Object]' || !url.startsWith('http')) {
+                    console.error('❌ URL inválida para descargar:', photoUrl);
+                    return;
+                }
+                
+                try {
+                    // Intentar primero con fetch directo (más rápido si CORS está configurado)
+                    let blob = null;
+                    try {
+                        const response = await fetch(url, { mode: 'cors' });
+                        if (response.ok) {
+                            blob = await response.blob();
+                        } else {
+                            throw new Error(`HTTP ${response.status}`);
+                        }
+                    } catch (directError) {
+                        // Si falla fetch directo, usar método alternativo con canvas
+                        blob = await new Promise((resolve, reject) => {
+                            const img = new Image();
+                            img.crossOrigin = 'anonymous';
+                            
+                            const timeout = setTimeout(() => {
+                                reject(new Error('Timeout al cargar imagen'));
+                            }, 8000);
+                            
+                            img.onload = () => {
+                                clearTimeout(timeout);
+                                try {
+                                    const canvas = document.createElement('canvas');
+                                    canvas.width = img.naturalWidth;
+                                    canvas.height = img.naturalHeight;
+                                    const ctx = canvas.getContext('2d');
+                                    ctx.drawImage(img, 0, 0);
+                                    
+                                    canvas.toBlob((blob) => {
+                                        if (blob) resolve(blob);
+                                        else reject(new Error('No se pudo convertir imagen a blob'));
+                                    }, 'image/jpeg', 0.95);
+                                } catch (error) {
+                                    reject(error);
+                                }
+                            };
+                            
+                            img.onerror = () => {
+                                clearTimeout(timeout);
+                                // Si falla, intentar con proxy CORS (más lento)
+                                const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
+                                
+                                fetch(proxyUrl)
+                                    .then(response => {
+                                        if (!response.ok) {
+                                            if (response.status === 429) {
+                                                throw new Error('Rate limit en proxy');
+                                            }
+                                            throw new Error(`HTTP ${response.status}`);
+                                        }
+                                        return response.blob();
+                                    })
+                                    .then(resolve)
+                                    .catch((proxyError) => {
+                                        reject(new Error('No se pudo descargar la imagen. Configura CORS en tu bucket R2.'));
+                                    });
+                            };
+                            
+                            img.src = url;
+                        });
+                    }
+                    
+                    // Crear enlace de descarga
+                    const downloadUrl = window.URL.createObjectURL(blob);
+                    const link = document.createElement('a');
+                    link.href = downloadUrl;
+                    link.download = `foto_${Date.now()}.jpg`;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    
+                    // Limpiar URL del objeto
+                    setTimeout(() => window.URL.revokeObjectURL(downloadUrl), 100);
+                    
+                } catch (error) {
+                    console.error('❌ Error al descargar foto:', error);
+                    alert('No se pudo descargar la foto debido a restricciones CORS.\n\n⚠️ SOLUCIÓN: Configura CORS en tu bucket de Cloudflare R2.');
+                }
+            }
+
+            // --- Descargar categoría completa como ZIP ---
+            async function downloadCategory(category) {
+                const downloadBtn = document.getElementById('downloadCategoryBtn');
+                downloadBtn.disabled = true;
+                downloadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Preparando ZIP...';
+
+                try {
+                    const zip = new JSZip();
+                    let photosToDownload = [];
+
+                    if (category === 'all') {
+                        // Para "Todas": crear carpetas por categoría
+                        Object.keys(allPhotos).forEach(cat => {
+                            const categoryPhotos = allPhotos[cat] || [];
+                            categoryPhotos.forEach(photo => {
+                                // photo puede ser un string (URL) o un objeto {id, r2_url, r2_key}
+                                const photoUrl = typeof photo === 'string' ? photo : photo.r2_url || photo.url || photo;
+                                photosToDownload.push({ url: photoUrl, category: cat, useSubfolders: true });
+                            });
+                        });
+                    } else if (category === 'favorites') {
+                        // Para "Favoritos": crear carpetas por categoría
+                        Object.keys(allPhotos).forEach(cat => {
+                            const categoryPhotos = allPhotos[cat] || [];
+                            categoryPhotos.forEach(photo => {
+                                // photo puede ser un string (URL) o un objeto {id, r2_url, r2_key}
+                                const photoUrl = typeof photo === 'string' ? photo : photo.r2_url || photo.url || photo;
+                                // Verificar si está en favoritos (comparar URLs)
+                                if (favorites.includes(photoUrl) || (typeof photo === 'object' && favorites.includes(photo.r2_url))) {
+                                    photosToDownload.push({ url: photoUrl, category: cat, useSubfolders: true });
+                                }
+                            });
+                        });
+                    } else {
+                        // Para una categoría específica: todas las fotos en la raíz
+                        const categoryPhotos = allPhotos[category] || [];
+                        categoryPhotos.forEach(photo => {
+                            // photo puede ser un string (URL) o un objeto {id, r2_url, r2_key}
+                            const photoUrl = typeof photo === 'string' ? photo : photo.r2_url || photo.url || photo;
+                            photosToDownload.push({ url: photoUrl, category: category, useSubfolders: false });
+                        });
+                    }
+
+                    // Verificar que hay fotos
+                    console.log('📦 Fotos preparadas para descargar:', photosToDownload.length);
+                    console.log('📦 Primeras 3 fotos:', photosToDownload.slice(0, 3));
+                    
+                    if (photosToDownload.length === 0) {
+                        window.showAlert('No hay fotos para descargar.', 'warning');
+                        downloadBtn.innerHTML = '<i class="fas fa-download"></i> Descargar';
+                        downloadBtn.disabled = false;
+                        return;
+                    }
+
+                    // Contador por categoría para nombres únicos
+                    const categoryCounters = {};
+                    let successCount = 0;
+                    let errorCount = 0;
+
+                    // Función para descargar una foto individual
+                    async function downloadSinglePhoto(photo, index, total) {
+                        // Asegurar que photo.url sea una string, no un objeto
+                        let photoUrl = photo.url;
+                        
+                        if (typeof photoUrl === 'object' && photoUrl !== null) {
+                            photoUrl = photoUrl.r2_url || photoUrl.url || null;
+                        }
+                        
+                        if (typeof photoUrl !== 'string') {
+                            photoUrl = String(photoUrl);
+                        }
+                        
+                        if (!photoUrl || photoUrl === 'null' || photoUrl === 'undefined' || photoUrl === '[object Object]' || !photoUrl.startsWith('http')) {
+                            return { success: false, error: 'URL inválida' };
+                        }
+                        
+                        try {
+                            // Intentar primero con fetch directo (más rápido si CORS está configurado)
+                            let blob = null;
+                            try {
+                                const response = await fetch(photoUrl, { mode: 'cors' });
+                                if (response.ok) {
+                                    blob = await response.blob();
+                                } else {
+                                    throw new Error(`HTTP ${response.status}`);
+                                }
+                            } catch (directError) {
+                                // Si falla fetch directo, usar método alternativo con canvas
+                                blob = await new Promise((resolve, reject) => {
+                                    const img = new Image();
+                                    img.crossOrigin = 'anonymous';
+                                    
+                                    const timeout = setTimeout(() => {
+                                        reject(new Error('Timeout'));
+                                    }, 8000);
+                                    
+                                    img.onload = () => {
+                                        clearTimeout(timeout);
+                                        try {
+                                            const canvas = document.createElement('canvas');
+                                            canvas.width = img.naturalWidth;
+                                            canvas.height = img.naturalHeight;
+                                            const ctx = canvas.getContext('2d');
+                                            ctx.drawImage(img, 0, 0);
+                                            
+                                            canvas.toBlob((blob) => {
+                                                if (blob) resolve(blob);
+                                                else reject(new Error('No se pudo convertir'));
+                                            }, 'image/jpeg', 0.95);
+                                        } catch (error) {
+                                            reject(error);
+                                        }
+                                    };
+                                    
+                                    img.onerror = () => {
+                                        clearTimeout(timeout);
+                                        const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(photoUrl)}`;
+                                        fetch(proxyUrl)
+                                            .then(response => {
+                                                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                                                return response.blob();
+                                            })
+                                            .then(resolve)
+                                            .catch(() => reject(new Error('Proxy falló')));
+                                    };
+                                    
+                                    img.src = photoUrl;
+                                });
+                            }
+                            
+                            if (!categoryCounters[photo.category]) {
+                                categoryCounters[photo.category] = 1;
+                            }
+                            
+                            const fileName = `foto_${categoryCounters[photo.category]}.jpg`;
+                            categoryCounters[photo.category]++;
+                            
+                            return {
+                                success: true,
+                                blob: blob,
+                                category: photo.category,
+                                fileName: fileName
+                            };
+                        } catch (error) {
+                            return { success: false, error: error.message };
+                        }
+                    }
+
+                    // Descargar en paralelo con límite de concurrencia (10 a la vez para mayor velocidad)
+                    const CONCURRENT_DOWNLOADS = 10;
+                    
+                    for (let i = 0; i < photosToDownload.length; i += CONCURRENT_DOWNLOADS) {
+                        const batch = photosToDownload.slice(i, i + CONCURRENT_DOWNLOADS);
+                        const batchPromises = batch.map((photo, batchIndex) => {
+                            const globalIndex = i + batchIndex;
+                            return downloadSinglePhoto(photo, globalIndex, photosToDownload.length)
+                                .then(result => {
+                                    if (result.success) {
+                                        const categoryFolder = zip.folder(result.category);
+                                        categoryFolder.file(result.fileName, result.blob);
+                                        successCount++;
+                                    } else {
+                                        errorCount++;
+                                    }
+                                    return result;
+                                });
+                        });
+                        
+                        // Actualizar UI solo una vez por lote (más eficiente)
+                        downloadBtn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Descargando... ${Math.min(i + CONCURRENT_DOWNLOADS, photosToDownload.length)}/${photosToDownload.length}`;
+                        
+                        await Promise.all(batchPromises);
+                    }
+                    
+                    console.log(`📊 Resumen: ${successCount} exitosas, ${errorCount} errores de ${photosToDownload.length} totales`);
+                    
+                    if (successCount === 0) {
+                        alert('No se pudo descargar ninguna foto debido a restricciones CORS.\n\n⚠️ SOLUCIÓN: Configura CORS en tu bucket de Cloudflare R2 para permitir descargas desde tu dominio.\n\nConsulta la documentación de Cloudflare R2 sobre configuración CORS.');
+                        downloadBtn.innerHTML = '<i class="fas fa-download"></i> Descargar';
+                        downloadBtn.disabled = false;
+                        return;
+                    }
+                    
+                    if (errorCount > 0) {
+                        console.warn(`⚠️ Se descargaron ${successCount} fotos exitosamente, pero ${errorCount} fallaron debido a CORS.`);
+                        console.warn('💡 Para descargar todas las fotos, configura CORS en tu bucket de Cloudflare R2.');
+                    }
+
+                    // Generar y descargar ZIP
+                    downloadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generando ZIP...';
+                    const content = await zip.generateAsync({ 
+                        type: 'blob',
+                        compression: "DEFLATE",
+                        compressionOptions: { level: 6 }
+                    });
+                    
+                    let zipName;
+                    const safeName = client.username.replace(/\s+/g, '_');
+                    if (category === 'all') {
+                        zipName = `${safeName}_Todas_las_fotos.zip`;
+                    } else if (category === 'favorites') {
+                        zipName = `${safeName}_Favoritos.zip`;
+                    } else {
+                        zipName = `${safeName}_${category.replace(/\s+/g, '_')}.zip`;
+                    }
+                    
+                    saveAs(content, zipName);
+
+                    downloadBtn.innerHTML = '<i class="fas fa-check"></i> ¡Descargado!';
+                    
+                    let btnText = 'Todas';
+                    if (category === 'favorites') btnText = 'Favoritos';
+                    else if (category !== 'all') btnText = 'Categoría';
+                    
+                    setTimeout(() => {
+                        downloadBtn.disabled = false;
+                        downloadBtn.innerHTML = `<i class="fas fa-download"></i> Descargar ${btnText}`;
+                    }, 2000);
+
+                } catch (error) {
+                    console.error('Error creando ZIP:', error);
+                    window.showAlert('Error al crear el archivo ZIP. Por favor, inténtalo de nuevo.', 'error');
+                    
+                    let btnText = 'Todas';
+                    if (category === 'favorites') btnText = 'Favoritos';
+                    else if (category !== 'all') btnText = 'Categoría';
+                    
+                    downloadBtn.disabled = false;
+                    downloadBtn.innerHTML = `<i class="fas fa-download"></i> Descargar ${btnText}`;
+                }
+            }
+
+            // --- Cerrar Lightbox ---
+            if (closeLightbox && lightbox) {
+                closeLightbox.addEventListener('click', () => {
+                    lightbox.classList.remove('visible');
+                    document.body.style.overflow = '';
+                });
+                
+                lightbox.addEventListener('click', (e) => {
+                    if (e.target === lightbox) {
+                        lightbox.classList.remove('visible');
+                        document.body.style.overflow = '';
+                    }
+                });
+                
+                // Navegación con teclado
+                document.addEventListener('keydown', (e) => {
+                    if (lightbox && lightbox.classList.contains('visible')) {
+                        if (e.key === 'Escape') {
+                            lightbox.classList.remove('visible');
+                            document.body.style.overflow = '';
+                        } else if (e.key === 'ArrowLeft') {
+                            navigateLightbox(-1);
+                        } else if (e.key === 'ArrowRight') {
+                            navigateLightbox(1);
+                        }
+                    }
+                });
+                
+                // Botones de navegación
+                const prevBtn = lightbox.querySelector('.lightbox-prev');
+                const nextBtn = lightbox.querySelector('.lightbox-next');
+                
+                if (prevBtn) {
+                    prevBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        navigateLightbox(-1);
+                    });
+                }
+                
+                if (nextBtn) {
+                    nextBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        navigateLightbox(1);
+                    });
+                }
+            }
+            
+            // Función para navegar en el lightbox
+            function navigateLightbox(direction) {
+                if (!lightbox || !lightboxImg) return;
+                
+                try {
+                    const allPhotos = JSON.parse(lightbox.dataset.allPhotos || '[]');
+                    if (allPhotos.length === 0) return;
+                    
+                    let currentIndex = parseInt(lightbox.dataset.currentIndex || '0');
+                    currentIndex += direction;
+                    
+                    // Navegación circular
+                    if (currentIndex < 0) {
+                        currentIndex = allPhotos.length - 1;
+                    } else if (currentIndex >= allPhotos.length) {
+                        currentIndex = 0;
+                    }
+                    
+                    const nextPhotoUrl = allPhotos[currentIndex];
+                    if (nextPhotoUrl) {
+                        lightboxImg.src = nextPhotoUrl;
+                        lightbox.dataset.currentIndex = currentIndex;
+                    }
+                } catch (error) {
+                    console.error('Error navegando lightbox:', error);
+                }
+            }
+
+            // --- Cerrar Sesión ---
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', () => {
+                    window.authService.logout();
+                });
+            }
+
+            // --- Ocultar indicador de carga ---
+            const loadingIndicator = document.getElementById('loadingIndicator');
+            if (loadingIndicator) {
+                loadingIndicator.remove();
+            }
+            
+            // --- Inicializar ---
+            console.log('🎨 Inicializando galería...');
+            renderCategories();
+            // Inicializar con la categoría "all" usando selectCategory para que se muestre el contador
+            selectCategory('all', 'fas fa-th', 'Todas las Fotos');
+            console.log('✅ Galería inicializada correctamente');
+            
+            } catch (error) {
+                console.error('❌ Error en dashboard-cliente:', error);
+                console.error('Stack trace:', error.stack);
+                
+                const errorDetails = `
+                    <div class="empty-state" style="padding: 2rem;">
+                        <i class="fas fa-exclamation-triangle" style="font-size: 3rem; color: var(--error); margin-bottom: 1rem;"></i>
+                        <h3>Error al cargar la galería</h3>
+                        <p style="margin: 1rem 0;"><strong>Error:</strong> ${error.message || 'Error desconocido'}</p>
+                        <details style="margin: 1rem 0; text-align: left; background: #f5f5f5; padding: 1rem; border-radius: 8px;">
+                            <summary style="cursor: pointer; font-weight: bold;">Detalles técnicos (click para ver)</summary>
+                            <pre style="margin-top: 0.5rem; font-size: 0.8rem; overflow-x: auto;">${error.stack || 'No hay stack trace disponible'}</pre>
+                        </details>
+                        <button onclick="location.reload()" style="margin-top: 1rem; padding: 0.75rem 1.5rem; background: var(--gold); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 1rem;">
+                            🔄 Recargar Página
+                        </button>
+                    </div>
+                `;
+                
+                const photosGrid = document.getElementById('photosGrid');
+                if (photosGrid) {
+                    photosGrid.innerHTML = errorDetails;
+                } else if (document.body) {
+                    document.body.innerHTML = errorDetails;
+                }
+            }
+        });
+        
+        // Log final para verificar que el script terminó de cargar
+        console.log('✅ dashboard-cliente.html: Script cargado completamente');
+    </script>
+</body>
+</html>

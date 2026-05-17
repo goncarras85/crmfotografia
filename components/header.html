@@ -1,0 +1,83 @@
+<!-- components/header.html -->
+<div class="mobile-overlay"></div>
+<header class="main-header">
+    <div class="navbar-container">
+        <!-- Logo -->
+        <a href="/pages/public/index.html" class="navbar-logo" aria-label="Ir a página de inicio">
+            <span class="logo-text">empresa</span>
+        </a>
+
+        <!-- Menú de Navegación -->
+        <nav class="main-nav" aria-label="Navegación principal">
+            <ul class="nav-links">
+
+                <!-- 1. Nosotros -->
+                <li><a href="/pages/public/nosotros.html" aria-label="Ir a página Nosotros">Nosotros</a></li>
+
+                <!-- 2. Galerías (Mega-Dropdown) -->
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" aria-label="Abrir menú de galerías" aria-expanded="false" aria-haspopup="true">Galerías <i class="fas fa-chevron-down" aria-hidden="true"></i></a>
+                    <div class="dropdown-menu mega-menu">
+                        <div class="mega-menu-container">
+                            <!-- Columna 1: Categoría 1 -->
+                            <div class="mega-column">
+                                <h6 class="mega-heading">Categoría 1</h6>
+                                <ul>
+                                    <li><a href="/pages/public/galeria-publica.html">Galería Pública</a></li>
+                                </ul>
+                            </div>
+                            <!-- Columna 2: Categoría 2 -->
+                            <div class="mega-column">
+                                <h6 class="mega-heading">Categoría 2</h6>
+                                <ul>
+                                    <li><a href="/pages/public/galeria-publica.html">Galería Pública</a></li>
+                                </ul>
+                            </div>
+                            <!-- Columna 3: Categoría 3 -->
+                            <div class="mega-column">
+                                <h6 class="mega-heading">Categoría 3</h6>
+                                <ul>
+                                    <li><a href="/pages/public/galeria-publica.html">Galería Pública</a></li>
+                                </ul>
+                            </div>
+                            <!-- Columna 4: Categoría 4 -->
+                            <div class="mega-column">
+                                <h6 class="mega-heading">Categoría 4</h6>
+                                <ul>
+                                    <li><a href="/pages/public/galeria-publica.html">Galería Pública</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </li>
+
+                <!-- 3. Servicios (Dropdown) -->
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" aria-label="Abrir menú de servicios" aria-expanded="false" aria-haspopup="true">Servicios <i class="fas fa-chevron-down" aria-hidden="true"></i></a>
+                    <ul class="dropdown-menu" role="menu">
+                        <li role="none"><a href="/pages/public/servicios.html" role="menuitem">Nuestros Servicios</a></li>
+                    </ul>
+                </li>
+
+                <!-- 4. Contacto (Enlace Directo) -->
+                <li><a href="/pages/public/contacto.html" aria-label="Ir a página de contacto">Contacto</a></li>
+            </ul>
+        </nav>
+
+        <!-- Utility Bar (Iconos y CTA a la derecha) -->
+        <div class="navbar-actions">
+            <a href="/pages/client/area-clientes.html" class="btn-icon" title="Acceder al área de clientes" aria-label="Acceder al área de clientes">
+                <i class="fas fa-user" aria-hidden="true"></i>
+            </a>
+            <a href="/pages/public/contacto.html" class="btn-primary cta-button" aria-label="Pedir cita para sesión fotográfica">Pedir Cita</a>
+            <!-- Botón Hamburguesa para Móvil -->
+            <button class="hamburger-menu" aria-label="Abrir menú de navegación" aria-expanded="false">
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+            </button>
+        </div>
+    </div>
+</header>
+
+<!-- El JavaScript del menú móvil se carga desde mobile-menu.js -->

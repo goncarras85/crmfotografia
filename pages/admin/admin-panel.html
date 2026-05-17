@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - CL Fotógrafos</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="../../css/style.css">
+    <script src="../../js/notifications.js" defer></script>
+    <script src="../../js/modals.js"></script>
+    <script src="../../js/email-service.js" defer></script>
+    <!-- Servicios de Backend -->
+    <script src="../../js/config.js"></script>
+    <script src="../../js/auth.js"></script>
+    <script src="../../js/db.js"></script>
+</head>
+<body class="admin-panel-body">
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-logo">CL<span>.</span>FOTÓGRAFOS</div>
+        <nav class="sidebar-nav">
+            <ul>
+                <li><a href="admin-panel.html" class="active">Dashboard</a></li>
+                <li><a href="mis-clientes.html">Mis Clientes</a></li>
+                <li><a href="gestionar-administradores.html">Administradores</a></li>
+                <li><a href="ajustes-admin.html">Ajustes</a></li>
+            </ul>
+        </nav>
+        <div class="sidebar-footer">
+            <div class="admin-profile">
+                <div class="admin-profile-avatar"></div>
+                <div class="admin-profile-info">
+                    <p id="adminNameDisplay">C. Lorenzo</p>
+                    <span>Admin</span>
+                </div>
+            </div>
+            <button class="logout-btn" id="logoutBtn">Salir</button>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <header class="top-bar">
+            <div class="search-bar">
+                <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                </svg>
+                <input type="text" id="searchInput" placeholder="Buscar cliente, proyecto...">
+            </div>
+            <div class="top-bar-actions">
+                <button class="new-client-btn" id="openModalBtn">+ NUEVO CLIENTE</button>
+            </div>
+        </header>
+
+        <section class="clients-table-container">
+            <div class="clients-table-header">
+                <h2>Clientes Recientes</h2>
+            </div>
+            <table class="clients-table">
+                <thead>
+                    <tr>
+                        <th>Área del Cliente</th>
+                        <th>Correo</th>
+                        <th>Fecha de Creación</th>
+                        <th>Clave de Acceso</th>
+                        <th>Total Imágenes</th>
+                    </tr>
+                </thead>
+                <tbody id="recentClientsTable">
+                    <!-- Los clientes se cargarán dinámicamente -->
+                </tbody>
+            </table>
+        </section>
+    </main>
+
+    <!-- Modal Nuevo Cliente -->
+    <div class="modal-backdrop" id="newClientModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>Crear Nuevo Cliente</h2>
+            </div>
+
+            <div class="modal-content">
+                <section class="modal-section">
+                    <div class="form-group">
+                        <label for="clientName">Nombre del Área del Cliente</label>
+                        <input type="text" id="clientName" placeholder="Ej: Boda de Ana y Carlos, Comunión de Laura">
+                    </div>
+                    <div class="form-group">
+                        <label for="clientEmail">Correo Electrónico del Cliente</label>
+                        <input type="email" id="clientEmail" placeholder="cliente@ejemplo.com">
+                    </div>
+                    <div class="form-group">
+                        <label for="accessKey">Clave de Acceso</label>
+                        <div class="input-group">
+                            <input type="text" id="accessKey" placeholder="Click en 'Generar' para crear una clave única" readonly style="background: #f5f5f5;">
+                            <button id="generateKeyBtn">Generar Clave</button>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="modal-section">
+                    <div class="form-group">
+                        <label for="categoryName">Categorías del Reportaje</label>
+                        <div class="input-group">
+                            <input type="text" id="categoryName" placeholder="Ej: Pre-boda, Ceremonia, Banquete...">
+                            <button id="addCategoryBtn">+ Añadir</button>
+                        </div>
+                    </div>
+                    <div class="category-tags" id="categoryTagsContainer">
+                        <!-- Las etiquetas se añadirán aquí dinámicamente -->
+                    </div>
+                </section>
+            </div>
+
+            <div class="modal-footer">
+                <button class="modal-btn modal-btn-cancel" id="closeModalBtn">Cancelar</button>
+                <button class="modal-btn modal-btn-create" id="createReportBtn">Crear Cliente</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async function() {
+            console.log('🚀 DOMContentLoaded ejecutado en admin-panel.html');
+            
+            // Verificar que los servicios estén disponibles
+            if (!window.authService || !window.dbService) {
+                console.error('❌ Servicios no disponibles');
+                return;
+            }
+
+            // Verificar autenticación - usar checkSession primero para inicializar currentUser
+            await window.authService.checkSession();
+            
+            // Mantener compatibilidad con código existente - verificar sessionStorage
+            const adminSession = sessionStorage.getItem('adminSession');
+            if (!adminSession) {
+                console.warn('⚠️ No hay adminSession en sessionStorage, redirigiendo...');
+                window.location.href = '../client/area-clientes.html';
+                return;
+            }
+            
+            const user = window.authService.getCurrentUser();
+            const session = JSON.parse(adminSession);
+            
+            // Si no hay usuario o no es admin, verificar la sesión del sessionStorage
+            if ((!user || user.type !== 'admin') && (!session || session.type !== 'admin')) {
+                console.warn('⚠️ Usuario no es admin, redirigiendo...');
+                window.location.href = '../client/area-clientes.html';
+                return;
+            }
+            const permissions = session.permissions;
+            const isSupremo = session.isSupremo === true || session.permissions === 'all';
+            
+            // Actualizar nombre del admin en el sidebar
+            const adminNameDisplay = document.getElementById('adminNameDisplay');
+            if (adminNameDisplay) {
+                if (session.name) {
+                    adminNameDisplay.textContent = session.name;
+                } else if (session.email) {
+                    // Fallback: usar email si no hay nombre
+                    adminNameDisplay.textContent = session.email.split('@')[0];
+                }
+            }
+
+            // Función para verificar permisos
+            function hasPermission(permission) {
+                if (isSupremo) return true; // Admin supremo tiene TODOS los permisos siempre
+                if (permissions === 'all') return true; // Admin principal tiene todos los permisos
+                if (Array.isArray(permissions) && permissions.includes('admin')) return true; // Permiso 'admin' da acceso total
+                return Array.isArray(permissions) && permissions.includes(permission);
+            }
+
+            // --- Renderizar Clientes Recientes ---
+            async function renderRecentClients() {
+                const recentClientsTable = document.getElementById('recentClientsTable');
+                
+                // Obtener clientes desde base de datos
+                const result = await window.dbService.getAllClients();
+                let clients = result.data || [];
+                
+                // Normalizar estructura
+                if (!CONFIG.useDemoMode()) {
+                    clients = clients.map(client => ({
+                        id: client.id,
+                        username: client.username,
+                        email: client.email,
+                        accessCode: client.access_code,
+                        createdAt: client.created_at
+                    }));
+                }
+                
+                // Ordenar por fecha de creación (más recientes primero)
+                const sortedClients = clients.sort((a, b) => {
+                    return new Date(b.createdAt) - new Date(a.createdAt);
+                });
+
+                // Tomar solo los últimos 10
+                const recentClients = sortedClients.slice(0, 10);
+
+                if (recentClients.length === 0) {
+                    recentClientsTable.innerHTML = `
+                        <tr>
+                            <td colspan="5" style="text-align: center; padding: 2rem; color: var(--text-secondary);">
+                                No hay clientes creados aún.
+                            </td>
+                        </tr>`;
+                    return;
+                }
+
+                // Generar HTML de la tabla con contadores de fotos
+                const clientsHtml = await Promise.all(recentClients.map(async (client) => {
+                    const createdDate = new Date(client.createdAt).toLocaleDateString('es-ES', {
+                        year: 'numeric',
+                        month: '2-digit',
+                        day: '2-digit'
+                    });
+
+                    // Contar total de imágenes desde la base de datos
+                    const clientId = CONFIG.useDemoMode() ? client.accessCode : client.id;
+                    const totalImages = await window.dbService.getClientPhotoCount(clientId);
+
+                    return `
+                        <tr class="client-row" data-key="${client.accessCode}">
+                            <td><strong>${client.username}</strong></td>
+                            <td>${client.email || '<span style="color: #999;">Sin email</span>'}</td>
+                            <td>${createdDate}</td>
+                            <td><code style="background: #f0f0f0; padding: 0.3rem 0.6rem; border-radius: 4px; font-family: monospace;">${client.accessCode}</code></td>
+                            <td style="text-align: center;"><span style="background: var(--gold); color: #fff; padding: 0.25rem 0.75rem; border-radius: 20px; font-weight: 600; font-size: 0.875rem;">${totalImages}</span></td>
+                        </tr>`;
+                }));
+
+                recentClientsTable.innerHTML = clientsHtml.join('');
+
+                // Añadir listeners a las filas para redirigir al gestor
+                recentClientsTable.querySelectorAll('.client-row').forEach(row => {
+                    row.style.cursor = 'pointer';
+                    row.style.transition = 'all 0.2s ease';
+
+                    row.addEventListener('mouseenter', () => {
+                        row.style.backgroundColor = '#fafafa';
+                        row.style.transform = 'translateX(3px)';
+                    });
+                    
+                    row.addEventListener('mouseleave', () => {
+                        row.style.backgroundColor = '';
+                        row.style.transform = 'translateX(0)';
+                    });
+
+                    row.addEventListener('click', () => {
+                        const key = row.dataset.key;
+                        window.location.href = `gestor-cliente.html?key=${encodeURIComponent(key)}`;
+                    });
+
+                    // Soporte de teclado
+                    row.addEventListener('keydown', (e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            row.click();
+                        }
+                    });
+                });
+            }
+
+            // --- Modal Elements (verificar que existan) ---
+            console.log('🔍 Buscando elementos del modal...');
+            const modal = document.getElementById('newClientModal');
+            const openBtn = document.getElementById('openModalBtn');
+            const closeBtn = document.getElementById('closeModalBtn');
+            const generateKeyBtn = document.getElementById('generateKeyBtn');
+            const accessKeyInput = document.getElementById('accessKey');
+            const createReportBtn = document.getElementById('createReportBtn');
+            const clientNameInput = document.getElementById('clientName');
+            const clientEmailInput = document.getElementById('clientEmail');
+            const categoryInput = document.getElementById('categoryName');
+            const addCategoryBtn = document.getElementById('addCategoryBtn');
+            const tagsContainer = document.getElementById('categoryTagsContainer');
+
+            // Verificar que todos los elementos existan
+            console.log('📋 Elementos encontrados:', {
+                modal: !!modal,
+                openBtn: !!openBtn,
+                closeBtn: !!closeBtn,
+                generateKeyBtn: !!generateKeyBtn,
+                accessKeyInput: !!accessKeyInput,
+                createReportBtn: !!createReportBtn,
+                clientNameInput: !!clientNameInput,
+                clientEmailInput: !!clientEmailInput,
+                categoryInput: !!categoryInput,
+                addCategoryBtn: !!addCategoryBtn,
+                tagsContainer: !!tagsContainer
+            });
+
+            if (!modal || !openBtn || !closeBtn || !generateKeyBtn || !accessKeyInput || !createReportBtn || !clientNameInput || !clientEmailInput || !categoryInput || !addCategoryBtn || !tagsContainer) {
+                console.error('❌ Error: No se encontraron todos los elementos del modal de crear cliente');
+                console.error('Elementos faltantes:', {
+                    modal: !modal ? 'FALTA' : 'OK',
+                    openBtn: !openBtn ? 'FALTA' : 'OK',
+                    closeBtn: !closeBtn ? 'FALTA' : 'OK',
+                    generateKeyBtn: !generateKeyBtn ? 'FALTA' : 'OK',
+                    accessKeyInput: !accessKeyInput ? 'FALTA' : 'OK',
+                    createReportBtn: !createReportBtn ? 'FALTA' : 'OK',
+                    clientNameInput: !clientNameInput ? 'FALTA' : 'OK',
+                    clientEmailInput: !clientEmailInput ? 'FALTA' : 'OK',
+                    categoryInput: !categoryInput ? 'FALTA' : 'OK',
+                    addCategoryBtn: !addCategoryBtn ? 'FALTA' : 'OK',
+                    tagsContainer: !tagsContainer ? 'FALTA' : 'OK'
+                });
+                return;
+            }
+
+            // Restringir acceso al botón de crear cliente (solo si NO es supremo y NO tiene permiso)
+            if (!hasPermission('createClients')) {
+                openBtn.style.display = 'none';
+                console.log('⚠️ Botón oculto por falta de permisos');
+            } else {
+                console.log('✅ Permisos verificados, botón visible');
+            }
+
+            // --- New Category Tag Logic ---
+
+            const addCategoryTag = () => {
+                const categoryName = categoryInput.value.trim();
+                if (categoryName === '') {
+                    return;
+                }
+
+                const tag = document.createElement('div');
+                tag.classList.add('tag-pill');
+                tag.innerHTML = `
+                    <span>${categoryName}</span>
+                    <button class="remove-tag" title="Eliminar">&times;</button>
+                `;
+
+                tagsContainer.appendChild(tag);
+                categoryInput.value = ''; // Clear input
+
+                // Add event listener to the new remove button
+                tag.querySelector('.remove-tag').addEventListener('click', () => {
+                    tag.remove();
+                });
+            };
+
+            addCategoryBtn.addEventListener('click', addCategoryTag);
+            // Also add on Enter key press
+            categoryInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault(); // Prevent form submission
+                    addCategoryTag();
+                }
+            });
+            
+            // --- Modal Logic ---
+            const openModal = () => {
+                console.log('🎯 openModal() llamado');
+                // Reset form on open
+                clientNameInput.value = '';
+                clientEmailInput.value = '';
+                categoryInput.value = '';
+                tagsContainer.innerHTML = '';
+                // Generar clave automáticamente al abrir el modal
+                generateKeyBtn.click();
+                modal.classList.add('visible');
+                console.log('✅ Modal abierto, clase "visible" agregada');
+            }
+            const closeModal = () => modal.classList.remove('visible');
+
+            console.log('🎧 Agregando listener al botón openBtn...');
+            openBtn.addEventListener('click', (e) => {
+                console.log('🖱️ Click en botón "Nuevo Cliente" detectado!', e);
+                e.preventDefault();
+                e.stopPropagation();
+                openModal();
+            });
+            console.log('✅ Listener agregado al botón openBtn');
+            closeBtn.addEventListener('click', closeModal);
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) closeModal();
+            });
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && modal.classList.contains('visible')) closeModal();
+            });
+
+            // --- Generate Key Logic ---
+            generateKeyBtn.addEventListener('click', () => {
+                // Genera una clave completamente aleatoria y única
+                const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789';
+                const timestamp = Date.now().toString(36); // Timestamp en base36 para unicidad
+                const randomPart = Array.from({length: 8}, () => 
+                    chars.charAt(Math.floor(Math.random() * chars.length))
+                ).join('');
+                
+                // Combina timestamp y parte aleatoria para garantizar unicidad
+                const key = randomPart + timestamp;
+                accessKeyInput.value = key;
+            });
+
+            // --- Create Report Logic (Updated) ---
+            createReportBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('🖱️ Click en botón "Crear Cliente"');
+                
+                // Verificar permisos
+                if (!hasPermission('createClients')) {
+                    console.warn('⚠️ No tienes permisos para crear clientes');
+                    if (window.showModernAlert) {
+                        window.showModernAlert('No tienes permisos para crear clientes', 'error');
+                    }
+                    closeModal();
+                    return;
+                }
+
+                const clientName = clientNameInput.value.trim();
+                const clientEmail = clientEmailInput.value.trim();
+                const accessKey = accessKeyInput.value.trim();
+
+                // Validar email
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+                // Validar campos obligatorios
+                if (!clientName || !clientEmail || !emailRegex.test(clientEmail) || !accessKey) {
+                    console.error('❌ Validación fallida: Campos incompletos o email inválido');
+                    console.log('Datos:', { clientName, clientEmail, accessKey, emailValido: emailRegex.test(clientEmail) });
+                    if (window.showModernAlert) {
+                        window.showModernAlert('Por favor, completa todos los campos correctamente', 'error');
+                    }
+                    return;
+                }
+
+                // Validar que haya al menos una categoría
+                const categoryTags = tagsContainer.querySelectorAll('.tag-pill');
+                if (categoryTags.length === 0) {
+                    console.error('❌ Validación fallida: No hay categorías añadidas');
+                    if (window.showModernAlert) {
+                        window.showModernAlert('Debes añadir al menos una categoría', 'error');
+                    }
+                    return;
+                }
+
+                // Obtener categorías como objetos con estructura para imágenes
+                const categories = Array.from(categoryTags).map(tag => ({
+                    name: tag.querySelector('span').textContent,
+                    images: []
+                }));
+
+                // Change button text to show progress
+                createReportBtn.textContent = 'Creando...';
+                createReportBtn.disabled = true;
+
+                // Crear cliente usando dbService (Supabase)
+                (async () => {
+                    try {
+                        // Crear nuevo cliente
+                        const newClient = {
+                            username: clientName,
+                            email: clientEmail,
+                            accessCode: accessKey,
+                            categories: categories.map(c => c.name) // Solo nombres para Supabase
+                        };
+
+                        // Guardar en base de datos usando dbService
+                        console.log('💾 Intentando crear cliente:', newClient);
+                        const result = await window.dbService.createClient(newClient);
+                        console.log('📊 Resultado de crear cliente:', result);
+                        
+                        if (!result.success) {
+                            console.error('❌ Error al crear cliente:', result.error || result.message);
+                            createReportBtn.textContent = 'Crear Cliente';
+                            createReportBtn.disabled = false;
+                            if (window.showModernAlert) {
+                                window.showModernAlert(result.message || 'Error al crear el cliente', 'error');
+                            }
+                            return;
+                        }
+
+                        // Cliente creado exitosamente
+                        const createdClient = {
+                            ...newClient,
+                            id: result.data.id || result.data.accessCode,
+                            createdAt: result.data.created_at || new Date().toISOString()
+                        };
+
+                        // Enviar email al cliente con sus credenciales
+                        if (window.emailService) {
+                            window.emailService.sendWelcomeEmail(createdClient).then(result => {
+                                console.log('📧 Resultado del envío:', result);
+                                
+                                // Mostrar modal con el resultado
+                                window.emailService.showEmailPreviewModal(
+                                    {
+                                        to_email: clientEmail,
+                                        to_name: clientName,
+                                        client_email: clientEmail,
+                                        access_code: accessKey,
+                                        login_url: `${window.location.origin}/pages/client/area-clientes.html`,
+                                        created_date: new Date().toLocaleDateString('es-ES')
+                                    },
+                                    result
+                                );
+                            });
+                        }
+
+                        // Reset button and close modal
+                        createReportBtn.textContent = 'Crear Cliente';
+                        createReportBtn.disabled = false;
+                        closeModal();
+
+                        // Actualizar tabla de clientes recientes
+                        renderRecentClients();
+                    } catch (error) {
+                        console.error('Error al crear cliente:', error);
+                        createReportBtn.textContent = 'Crear Cliente';
+                        createReportBtn.disabled = false;
+                    }
+                })();
+            });
+
+            // --- Search functionality ---
+            const searchInput = document.getElementById('searchInput');
+            const recentClientsTable = document.getElementById('recentClientsTable');
+            
+            searchInput.addEventListener('input', (e) => {
+                const searchTerm = e.target.value.toLowerCase().trim();
+                const rows = recentClientsTable.querySelectorAll('tr');
+                
+                rows.forEach(row => {
+                    const rowText = row.textContent.toLowerCase();
+                    
+                    if (rowText.includes(searchTerm)) {
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+            });
+
+            // Renderizar clientes recientes al cargar la página
+            renderRecentClients();
+
+            // --- Botón de Logout ---
+            const logoutBtn = document.querySelector('.logout-btn');
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', async (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('🚪 Click en botón Salir');
+                    
+                    if (window.authService && typeof window.authService.logout === 'function') {
+                        try {
+                            window.authService.logout();
+                        } catch (error) {
+                            console.error('❌ Error al hacer logout:', error);
+                            // Fallback: limpiar sessionStorage y redirigir
+                            sessionStorage.clear();
+                            window.location.href = '../client/area-clientes.html';
+                        }
+                    } else {
+                        console.warn('⚠️ authService no disponible, usando fallback');
+                        // Fallback: limpiar sessionStorage y redirigir
+                        sessionStorage.clear();
+                        window.location.href = '../client/area-clientes.html';
+                    }
+                });
+            }
+        });
+    </script>
+
+    <style>
+        /* Ajustes específicos para Admin Panel */
+        @media (max-width: 600px) {
+            .modal-content {
+                width: 95%;
+            }
+        }
+    </style>
+
+</body>
+</html>

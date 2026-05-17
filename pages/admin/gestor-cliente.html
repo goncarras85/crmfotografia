@@ -1,0 +1,1786 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestor de Cliente - CL Fotógrafos</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="../../css/style.css">
+    <script src="../../js/notifications.js" defer></script>
+    <script src="../../js/modals.js"></script>
+    <!-- Servicios de Backend -->
+    <script src="../../js/config.js"></script>
+    <script src="../../js/auth.js"></script>
+    <script src="../../js/db.js"></script>
+    <script type="module" src="../../js/upload.js"></script>
+    <style>
+        .client-editor-container {
+            background: var(--card-bg);
+            border: 1px solid #333333;
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .client-editor-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid #333333;
+        }
+
+        .client-editor-header h2 {
+            font-size: 1.5rem;
+            color: var(--text-primary);
+            margin: 0;
+        }
+
+        .edit-mode-toggle {
+            background: var(--gold);
+            color: #0a0a0a;
+            border: none;
+            padding: 0.6rem 1.2rem;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        .edit-mode-toggle:hover {
+            background: #b8941f;
+            transform: translateY(-2px);
+        }
+
+        .client-info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .info-field {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .info-field label {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .info-field input {
+            padding: 0.8rem;
+            border: 1px solid #333333;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: var(--bg);
+            color: var(--text-primary);
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        .info-field input:disabled {
+            background: var(--bg);
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        .info-field input:enabled {
+            background: var(--card-bg);
+            border-color: var(--gold);
+        }
+
+        .info-field input:focus {
+            outline: none;
+            border-color: var(--gold);
+            box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.2);
+        }
+
+        .categories-container {
+            margin-top: 2rem;
+        }
+
+        .categories-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .categories-header h3 {
+            font-size: 1.2rem;
+            color: var(--text-primary);
+            margin: 0;
+        }
+
+        .add-category-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.6rem 1.2rem;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        .add-category-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(184, 148, 31, 0.3);
+        }
+
+        .category-card {
+            background: var(--card-bg);
+            border: 1px solid #333333;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .category-card:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            border-color: var(--gold);
+        }
+
+        .category-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .category-title-group {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            flex: 1;
+        }
+
+        .category-title-group input {
+            padding: 0.6rem 1rem;
+            border: 1px solid #333333;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: 600;
+            background: var(--bg);
+            color: var(--text-primary);
+            flex: 1;
+            max-width: 300px;
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        .category-title-group input:disabled {
+            background: transparent;
+            border: none;
+            font-size: 1.1rem;
+            padding: 0;
+            color: var(--gold);
+        }
+
+        .category-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .category-btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        .btn-edit {
+            background: #2196F3;
+            color: white;
+        }
+
+        .btn-edit:hover {
+            background: #1976D2;
+        }
+
+        .btn-delete {
+            background: #f44336;
+            color: white;
+        }
+
+        .btn-delete:hover {
+            background: #d32f2f;
+        }
+
+        .btn-save {
+            background: var(--gold);
+            color: #0a0a0a;
+        }
+
+        .btn-save:hover {
+            background: #b8941f;
+        }
+
+        .upload-area,
+        label.upload-area {
+            background: var(--bg);
+            border: 3px dashed var(--gold);
+            border-radius: 12px;
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 1rem;
+            display: block;
+        }
+        
+        label.upload-area {
+            /* Asegurar que label se comporte como div */
+            box-sizing: border-box;
+            width: 100%;
+        }
+
+        .upload-area:hover,
+        label.upload-area:hover {
+            background: rgba(184, 148, 31, 0.05);
+            border-color: var(--gold);
+        }
+
+        .upload-area.dragover,
+        label.upload-area.dragover {
+            background: rgba(184, 148, 31, 0.1);
+            border-color: var(--gold);
+            border-width: 4px;
+        }
+
+        .upload-icon {
+            font-size: 3rem;
+            color: var(--gold);
+            margin-bottom: 1rem;
+            pointer-events: none;
+        }
+
+        .upload-text {
+            font-size: 1rem;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+            pointer-events: none;
+        }
+
+        .upload-hint {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            pointer-events: none;
+        }
+
+        .files-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .file-item {
+            position: relative;
+            background: var(--card-bg);
+            border: 1px solid #333333;
+            border-radius: 8px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .file-item:hover {
+            box-shadow: 0 4px 12px rgba(184, 148, 31, 0.2);
+            transform: translateY(-2px);
+            border-color: var(--primary);
+        }
+
+        .file-preview {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+            background: var(--bg);
+        }
+
+        .file-info {
+            padding: 0.8rem;
+            background: var(--card-bg);
+        }
+
+        .file-name {
+            font-size: 0.85rem;
+            color: var(--text-primary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            font-weight: 500;
+        }
+
+        .file-size {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin-top: 0.3rem;
+        }
+
+        .file-remove {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: rgba(244, 67, 54, 0.9);
+            color: white;
+            border: none;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.2rem;
+            line-height: 1;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .file-remove:hover {
+            background: #d32f2f;
+            transform: scale(1.1);
+        }
+
+        .save-changes-bar {
+            position: fixed;
+            bottom: 0;
+            left: 250px;
+            right: 0;
+            background: var(--card-bg);
+            border-top: 1px solid #333333;
+            padding: 1.5rem 2rem;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.5);
+            display: none;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 100;
+        }
+
+        .save-changes-bar.visible {
+            display: flex;
+        }
+
+        .save-changes-text {
+            font-size: 1rem;
+            color: var(--text-primary);
+        }
+
+        .save-changes-actions {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .btn-cancel, .btn-save-all {
+            padding: 0.8rem 2rem;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        .btn-cancel {
+            background: transparent;
+            color: var(--text-secondary);
+            border: 1px solid #333333;
+        }
+
+        .btn-cancel:hover {
+            background: var(--bg);
+            color: var(--text-primary);
+        }
+
+        .btn-save-all {
+            background: var(--gold);
+            color: #0a0a0a;
+        }
+
+        .btn-save-all:hover {
+            background: #b8941f;
+            transform: translateY(-2px);
+        }
+
+        .video-icon {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 3rem;
+            color: rgba(255,255,255,0.9);
+        }
+    </style>
+</head>
+<body class="admin-panel-body">
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-logo">CL<span>.</span>FOTÓGRAFOS</div>
+        <nav class="sidebar-nav">
+            <ul>
+                <li><a href="admin-panel.html">Dashboard</a></li>
+                <li><a href="mis-clientes.html">Mis Clientes</a></li>
+                <li><a href="ajustes-admin.html">Ajustes</a></li>
+            </ul>
+        </nav>
+        <div class="sidebar-footer">
+            <div class="admin-profile">
+                <div class="admin-profile-avatar"></div>
+                <div class="admin-profile-info">
+                    <p id="adminNameDisplay">C. Lorenzo</p>
+                    <span>Admin</span>
+                </div>
+            </div>
+            <button class="logout-btn" id="logoutBtn">Salir</button>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <header class="top-bar">
+            <div class="search-bar">
+                <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                </svg>
+                <input type="text" placeholder="Buscar en categorías...">
+            </div>
+            <div class="top-bar-actions">
+                <button class="new-client-btn" onclick="window.location.href='mis-clientes.html'">← VOLVER A CLIENTES</button>
+            </div>
+        </header>
+
+        <!-- Client Editor -->
+        <section class="client-editor-container">
+            <div class="client-editor-header">
+                <h2>Información del Cliente</h2>
+                <div style="display: flex; gap: 1rem;">
+                    <button class="edit-mode-toggle" id="editToggleBtn">Habilitar Edición</button>
+                    <button class="edit-mode-toggle" id="deleteClientBtn" style="background: #f44336; color: white;">Eliminar Cliente</button>
+                </div>
+            </div>
+            
+            <div class="client-info-grid">
+                <div class="info-field">
+                    <label>Nombres de los Novios</label>
+                    <input type="text" id="clientName" value="Sofía & Marcos" disabled>
+                </div>
+                <div class="info-field">
+                    <label>Clave de Acceso</label>
+                    <input type="text" id="clientKey" value="BODA-S9M2" disabled>
+                </div>
+                <div class="info-field">
+                    <label>Fecha de Creación</label>
+                    <input type="text" value="20/08/2024" disabled readonly style="background: #f8f8f8; cursor: not-allowed;">
+                </div>
+            </div>
+        </section>
+
+        <!-- Categories Section -->
+        <section class="client-editor-container">
+            <div class="categories-header">
+                <h3>Categorías del Reportaje</h3>
+                <button class="add-category-btn" id="addCategoryBtn">+ Nueva Categoría</button>
+            </div>
+
+            <div id="categoriesContainer">
+                <!-- Categoría 1: Pre-boda -->
+                <div class="category-card" data-category-id="1">
+                    <div class="category-header">
+                        <div class="category-title-group">
+                            <input type="text" class="category-name-input" value="Pre-boda" disabled data-original="Pre-boda">
+                        </div>
+                        <div class="category-actions">
+                            <button class="category-btn btn-edit edit-category-btn">Editar</button>
+                            <button class="category-btn btn-delete delete-category-btn">Eliminar Categoría</button>
+                            <button class="category-btn btn-delete-photos delete-photos-btn" style="background: #ff9800; color: white;" title="Eliminar todas las fotos de esta categoría">
+                                <i class="fas fa-trash-alt"></i> Eliminar Fotos
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <label class="upload-area" data-category="1" style="cursor: pointer;">
+                        <input type="file" multiple accept="image/*,video/*" style="display: none;" class="file-input">
+                        <div class="upload-icon"><i class="fas fa-cloud-upload-alt"></i></div>
+                        <div class="upload-text">Haz clic o arrastra archivos aquí</div>
+                        <div class="upload-hint">Imágenes y videos aceptados (JPG, PNG, MP4, MOV)</div>
+                    </label>
+                    
+                    <div class="files-grid" data-files-container="1">
+                        <!-- Los archivos subidos aparecerán aquí -->
+                    </div>
+                </div>
+
+                <!-- Categoría 2: Ceremonia -->
+                <div class="category-card" data-category-id="2">
+                    <div class="category-header">
+                        <div class="category-title-group">
+                            <input type="text" class="category-name-input" value="Ceremonia" disabled data-original="Ceremonia">
+                        </div>
+                        <div class="category-actions">
+                            <button class="category-btn btn-edit edit-category-btn">Editar</button>
+                            <button class="category-btn btn-delete delete-category-btn">Eliminar Categoría</button>
+                            <button class="category-btn btn-delete-photos delete-photos-btn" style="background: #ff9800; color: white;" title="Eliminar todas las fotos de esta categoría">
+                                <i class="fas fa-trash-alt"></i> Eliminar Fotos
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <label class="upload-area" data-category="2" style="cursor: pointer;">
+                        <input type="file" multiple accept="image/*,video/*" style="display: none;" class="file-input">
+                        <div class="upload-icon"><i class="fas fa-cloud-upload-alt"></i></div>
+                        <div class="upload-text">Haz clic o arrastra archivos aquí</div>
+                        <div class="upload-hint">Imágenes y videos aceptados (JPG, PNG, MP4, MOV)</div>
+                    </label>
+                    
+                    <div class="files-grid" data-files-container="2">
+                        <!-- Los archivos subidos aparecerán aquí -->
+                    </div>
+                </div>
+
+                <!-- Categoría 3: Recepción -->
+                <div class="category-card" data-category-id="3">
+                    <div class="category-header">
+                        <div class="category-title-group">
+                            <input type="text" class="category-name-input" value="Recepción" disabled data-original="Recepción">
+                        </div>
+                        <div class="category-actions">
+                            <button class="category-btn btn-edit edit-category-btn">Editar</button>
+                            <button class="category-btn btn-delete delete-category-btn">Eliminar Categoría</button>
+                            <button class="category-btn btn-delete-photos delete-photos-btn" style="background: #ff9800; color: white;" title="Eliminar todas las fotos de esta categoría">
+                                <i class="fas fa-trash-alt"></i> Eliminar Fotos
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <label class="upload-area" data-category="3" style="cursor: pointer;">
+                        <input type="file" multiple accept="image/*,video/*" style="display: none;" class="file-input">
+                        <div class="upload-icon"><i class="fas fa-cloud-upload-alt"></i></div>
+                        <div class="upload-text">Haz clic o arrastra archivos aquí</div>
+                        <div class="upload-hint">Imágenes y videos aceptados (JPG, PNG, MP4, MOV)</div>
+                    </label>
+                    
+                    <div class="files-grid" data-files-container="3">
+                        <!-- Los archivos subidos aparecerán aquí -->
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Save Changes Bar -->
+    <div class="save-changes-bar" id="saveChangesBar">
+        <div class="save-changes-text">Tienes cambios sin guardar</div>
+        <div class="save-changes-actions">
+            <button class="btn-cancel" id="cancelChangesBtn">Cancelar</button>
+            <button class="btn-save-all" id="saveAllBtn">Guardar Todos los Cambios</button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Verificar sesión de administrador
+            const adminSession = sessionStorage.getItem('adminSession');
+            if (!adminSession) {
+                window.location.href = '../client/area-clientes.html';
+                return;
+            }
+
+            const session = JSON.parse(adminSession);
+            const permissions = session.permissions;
+            const isSupremo = session.isSupremo === true || session.permissions === 'all';
+            
+            // Actualizar nombre del admin en el sidebar
+            const adminNameDisplay = document.getElementById('adminNameDisplay');
+            if (adminNameDisplay) {
+                if (session.name) {
+                    adminNameDisplay.textContent = session.name;
+                } else if (session.email) {
+                    // Fallback: usar email si no hay nombre
+                    adminNameDisplay.textContent = session.email.split('@')[0];
+                }
+            }
+
+            // Función para verificar permisos
+            function hasPermission(permission) {
+                if (isSupremo) return true; // Admin supremo tiene TODOS los permisos siempre
+                if (permissions === 'all') return true;
+                if (Array.isArray(permissions) && permissions.includes('admin')) return true; // Permiso 'admin' da acceso total
+                return Array.isArray(permissions) && permissions.includes(permission);
+            }
+            let editMode = false;
+            let hasChanges = false;
+            let categoryIdCounter = 4;
+
+            const editToggleBtn = document.getElementById('editToggleBtn');
+            const clientNameInput = document.getElementById('clientName');
+            const clientKeyInput = document.getElementById('clientKey');
+            const saveChangesBar = document.getElementById('saveChangesBar');
+            const addCategoryBtn = document.getElementById('addCategoryBtn');
+            const categoriesContainer = document.getElementById('categoriesContainer');
+
+            // --- Verificar autenticación ---
+            // No usar getCurrentUser() aquí porque puede no estar inicializado aún
+            // Ya verificamos adminSession arriba, que es suficiente
+            // Si necesitamos verificar el servicio, hacerlo después de cargar datos
+
+            // --- Cargar datos del cliente desde URL ---
+            const urlParams = new URLSearchParams(window.location.search);
+            const clientKey = urlParams.get('key');
+
+            if (!clientKey) {
+                window.location.href = 'mis-clientes.html';
+                return;
+            }
+
+            // Obtener cliente desde base de datos
+            let client = null;
+            
+            // Esperar a que dbService esté listo
+            if (window.dbService && typeof window.dbService.ensureSupabaseReady === 'function') {
+                await window.dbService.ensureSupabaseReady();
+            }
+            
+            if (CONFIG.useDemoMode()) {
+                // Modo demo: usar localStorage
+                const clients = JSON.parse(localStorage.getItem('clients') || '[]');
+                client = clients.find(c => c.accessCode === clientKey);
+            } else {
+                // Modo real: usar Supabase
+                try {
+                    const result = await window.dbService.getClientByAccessCode(clientKey);
+                    if (result && result.success && result.data) {
+                        client = {
+                            id: result.data.id,
+                            username: result.data.username,
+                            email: result.data.email,
+                            accessCode: result.data.access_code,
+                            categories: result.data.categories || [], // Cargar categorías desde Supabase
+                            createdAt: result.data.created_at
+                        };
+                        console.log('📋 Cliente cargado con categorías:', client.categories);
+                    } else {
+                        console.warn('⚠️ Cliente no encontrado o error al cargar:', result);
+                    }
+                } catch (error) {
+                    console.error('❌ Error al obtener cliente:', error);
+                }
+            }
+
+            if (!client) {
+                console.warn('⚠️ Cliente no encontrado, redirigiendo...');
+                window.location.href = 'mis-clientes.html';
+                return;
+            }
+
+            // Cargar datos del cliente en los inputs
+            clientNameInput.value = client.username;
+            clientKeyInput.value = client.accessCode;
+            
+            // Guardar valores originales para comparación
+            clientNameInput.setAttribute('data-original-name', client.username);
+            
+            // Cargar fecha de creación
+            const createdDate = new Date(client.createdAt).toLocaleDateString('es-ES', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit'
+            });
+            document.querySelector('[readonly]').value = createdDate;
+
+            // Guardar valor original de la clave para comparación
+            clientKeyInput.setAttribute('data-original-key', client.accessCode);
+
+            // --- Cargar categorías y fotos existentes ---
+            async function loadClientData() {
+                // Limpiar contenedor de categorías
+                categoriesContainer.innerHTML = '';
+
+                // Obtener fotos guardadas
+                let savedPhotos = {};
+                if (CONFIG.useDemoMode()) {
+                    savedPhotos = JSON.parse(localStorage.getItem(`photos_${client.accessCode}`) || '{}');
+                } else {
+                    const photosResult = await window.dbService.getClientPhotos(client.id);
+                    if (photosResult.success) {
+                        savedPhotos = photosResult.data;
+                    }
+                }
+
+                // Obtener categorías únicas de las fotos
+                const categoriesSet = new Set();
+                Object.keys(savedPhotos).forEach(cat => categoriesSet.add(cat));
+                if (client.categories && client.categories.length > 0) {
+                    client.categories.forEach(cat => {
+                        const catName = typeof cat === 'object' ? cat.name : cat;
+                        categoriesSet.add(catName);
+                    });
+                }
+                const categories = Array.from(categoriesSet);
+
+                // Si no hay categorías, crear una por defecto
+                if (categories.length === 0) {
+                    categories.push('General');
+                }
+
+                // Crear categorías
+                categories.forEach((categoryName, index) => {
+                    const categoryCard = createCategoryCard(categoryName, index + 1);
+                    categoriesContainer.appendChild(categoryCard);
+                    
+                    // Cargar fotos existentes en esta categoría
+                    const categoryPhotos = savedPhotos[categoryName] || [];
+                    if (categoryPhotos.length > 0) {
+                        const filesContainer = categoryCard.querySelector('.files-grid');
+                        categoryPhotos.forEach(photo => {
+                            // photo puede ser un string (URL) o un objeto {id, r2_url, r2_key}
+                            const photoUrl = typeof photo === 'string' ? photo : photo.r2_url;
+                            const photoId = typeof photo === 'object' ? photo.id : null;
+                            const r2Key = typeof photo === 'object' ? photo.r2_key : null;
+                            
+                            // Filtrar URLs de demo inválidas
+                            if (photoUrl && !photoUrl.includes('img/demo.jpg') && !photoUrl.startsWith('img/')) {
+                                const fileItem = createFileItemFromUrl(photoUrl, null, photoId, r2Key);
+                                filesContainer.appendChild(fileItem);
+                            } else {
+                                console.warn('⚠️ URL de demo inválida ignorada:', photoUrl);
+                            }
+                        });
+                    }
+
+                    initializeCategoryEvents(categoryCard);
+                });
+            }
+
+            // --- Crear tarjeta de categoría ---
+            function createCategoryCard(categoryName, categoryId) {
+                const card = document.createElement('div');
+                card.className = 'category-card';
+                card.setAttribute('data-category-id', categoryId);
+                card.innerHTML = `
+                    <div class="category-header">
+                        <div class="category-title-group">
+                            <input type="text" class="category-name-input" value="${categoryName}" disabled data-original="${categoryName}">
+                        </div>
+                        <div class="category-actions">
+                            <button class="category-btn btn-edit edit-category-btn">Editar</button>
+                            <button class="category-btn btn-delete delete-category-btn">Eliminar Categoría</button>
+                            <button class="category-btn btn-delete-photos delete-photos-btn" style="background: #ff9800; color: white;" title="Eliminar todas las fotos de esta categoría">
+                                <i class="fas fa-trash-alt"></i> Eliminar Fotos
+                            </button>
+                        </div>
+                    </div>
+                    <label class="upload-area" data-category="${categoryId}" style="cursor: pointer;">
+                        <input type="file" class="file-input" multiple accept="image/*,video/*" style="display: none;">
+                        <div class="upload-icon"><i class="fas fa-cloud-upload-alt"></i></div>
+                        <div class="upload-text">Haz clic o arrastra archivos aquí</div>
+                        <div class="upload-hint">Imágenes y videos aceptados (JPG, PNG, MP4, MOV)</div>
+                    </label>
+                    <div class="files-grid" data-files-container="${categoryId}"></div>
+                `;
+                return card;
+            }
+
+            // --- Crear elemento de carga ---
+            function createLoadingFileItem(file) {
+                const div = document.createElement('div');
+                div.className = 'file-item loading';
+                div.innerHTML = `
+                    <div class="file-preview" style="background: var(--bg); display: flex; align-items: center; justify-content: center;">
+                        <div style="text-align: center;">
+                            <i class="fas fa-spinner fa-spin" style="font-size: 2rem; color: var(--gold); margin-bottom: 0.5rem;"></i>
+                            <div class="upload-progress-container" style="width: 100px; height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; overflow: hidden;">
+                                <div class="upload-progress-bar" style="width: 0%; height: 100%; background: var(--gold); transition: width 0.3s;"></div>
+                            </div>
+                            <p style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.5rem;">${file.name}</p>
+                        </div>
+                    </div>
+                `;
+                return div;
+            }
+
+            // --- Crear elemento de archivo desde URL ---
+            function createFileItemFromUrl(url, fileName = null, photoId = null, r2Key = null) {
+                const div = document.createElement('div');
+                div.className = 'file-item';
+                div.dataset.fileUrl = url;
+                if (photoId) {
+                    div.dataset.photoId = photoId;
+                }
+                if (r2Key) {
+                    div.dataset.r2Key = r2Key;
+                }
+
+                const isVideo = url.match(/\.(mp4|webm|ogg)$/i) || (fileName && fileName.match(/\.(mp4|webm|ogg)$/i));
+                
+                if (isVideo) {
+                    div.innerHTML = `
+                        <div class="file-preview">
+                            <video src="${url}" style="width: 100%; height: 100%; object-fit: cover;"></video>
+                            <div class="video-icon"><i class="fas fa-play-circle"></i></div>
+                        </div>
+                        <button class="file-remove" title="Eliminar"><i class="fas fa-times"></i></button>
+                    `;
+                } else {
+                    // Escapar la URL para evitar problemas con caracteres especiales
+                    const safeUrl = url.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                    div.innerHTML = `
+                        <div class="file-preview">
+                            <img src="${safeUrl}" alt="${fileName || 'Preview'}" 
+                                 style="width: 100%; height: 100%; object-fit: cover; display: block;" 
+                                 loading="lazy"
+                                 onerror="console.error('❌ Error cargando imagen:', '${safeUrl}'); this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'200\\' height=\\'200\\'%3E%3Crect fill=\\'%23ddd\\' width=\\'200\\' height=\\'200\\'/%3E%3Ctext x=\\'50%25\\' y=\\'50%25\\' text-anchor=\\'middle\\' dy=\\'.3em\\' fill=\\'%23999\\' font-family=\\'sans-serif\\' font-size=\\'14\\'%3EError%3C/text%3E%3C/svg%3E';">
+                        </div>
+                        <button class="file-remove" title="Eliminar"><i class="fas fa-times"></i></button>
+                    `;
+                }
+
+                // Botón de eliminar
+                div.querySelector('.file-remove').addEventListener('click', async (e) => {
+                    if (!hasPermission('uploadFiles')) {
+                        return;
+                    }
+                    e.stopPropagation();
+                    
+                    const photoId = div.dataset.photoId;
+                    const r2Key = div.dataset.r2Key;
+                    
+                    // Si hay photoId o r2Key, eliminar de Supabase y R2
+                    if (photoId || r2Key) {
+                        try {
+                            // Eliminar de Supabase si hay photoId
+                            if (photoId) {
+                                console.log('🗑️ Eliminando foto de Supabase:', photoId);
+                                const deleteResult = await window.dbService.deletePhoto(photoId);
+                                if (deleteResult.success) {
+                                    console.log('✅ Foto eliminada de Supabase');
+                                } else {
+                                    console.error('❌ Error al eliminar de Supabase:', deleteResult);
+                                }
+                            }
+                            
+                            // Eliminar de R2 si hay r2Key
+                            if (r2Key && window.uploadService) {
+                                console.log('🗑️ Eliminando imagen de R2:', r2Key);
+                                const deleteR2Result = await window.uploadService.deleteImage(r2Key);
+                                if (deleteR2Result.success) {
+                                    console.log('✅ Imagen eliminada de R2');
+                                } else {
+                                    console.error('❌ Error al eliminar de R2:', deleteR2Result);
+                                }
+                            }
+                        } catch (error) {
+                            console.error('❌ Error al eliminar foto:', error);
+                        }
+                    }
+                    
+                    // Eliminar del DOM
+                    div.remove();
+                    showSaveBar();
+                });
+
+                return div;
+            }
+
+            // Inicializar eventos de categorías estáticas del HTML (si existen antes de loadClientData)
+            document.querySelectorAll('.category-card').forEach(card => {
+                initializeCategoryEvents(card);
+            });
+
+            // Cargar datos del cliente (esto eliminará las categorías estáticas y creará nuevas)
+            await loadClientData();
+
+            // Restringir funciones según permisos
+            // Tanto el nombre como la clave requieren permiso editClientData
+            if (!hasPermission('editClientData')) {
+                // Deshabilitar edición de nombre y clave
+                clientNameInput.disabled = true;
+                clientNameInput.style.opacity = '0.5';
+                clientNameInput.style.cursor = 'not-allowed';
+                clientNameInput.title = 'No tienes permiso para editar datos del cliente';
+                
+                clientKeyInput.disabled = true;
+                clientKeyInput.style.opacity = '0.5';
+                clientKeyInput.style.cursor = 'not-allowed';
+                clientKeyInput.title = 'No tienes permiso para editar datos del cliente';
+                
+                // Ocultar o deshabilitar el botón de edición
+                editToggleBtn.style.opacity = '0.5';
+                editToggleBtn.style.cursor = 'not-allowed';
+                editToggleBtn.title = 'No tienes permiso para editar datos del cliente';
+            }
+
+            if (!hasPermission('manageCategories')) {
+                addCategoryBtn.style.display = 'none';
+                
+                // Deshabilitar edición de nombres de categorías existentes
+                document.querySelectorAll('.category-name-input').forEach(input => {
+                    input.disabled = true;
+                    input.style.opacity = '0.7';
+                });
+            }
+
+            // Toggle edit mode for client info
+            editToggleBtn.addEventListener('click', () => {
+                // Verificar permiso antes de permitir editar
+                if (!hasPermission('editClientData')) {
+                    console.warn('⚠️ No tienes permiso para editar datos del cliente');
+                    return;
+                }
+                
+                editMode = !editMode;
+                
+                if (editMode) {
+                    editToggleBtn.textContent = 'Deshabilitar Edición';
+                    editToggleBtn.style.background = '#f44336';
+                    // Permitir editar nombre y clave solo si tiene permiso editClientData
+                    clientNameInput.disabled = false;
+                    clientKeyInput.disabled = false;
+                } else {
+                    editToggleBtn.textContent = 'Habilitar Edición';
+                    editToggleBtn.style.background = '#D4AF37';
+                    clientNameInput.disabled = true;
+                    clientKeyInput.disabled = true;
+                }
+            });
+
+            // Detect changes in client info
+            clientNameInput.addEventListener('input', () => {
+                showSaveBar();
+            });
+            
+                clientKeyInput.addEventListener('input', () => {
+                    if (!hasPermission('editClientData')) {
+                        clientKeyInput.value = clientKeyInput.getAttribute('data-original-key');
+                        console.warn('⚠️ No tienes permiso para editar datos del cliente');
+                        return;
+                    }
+                showSaveBar();
+            });
+            
+            // Prevenir edición del nombre si no tiene permiso
+            clientNameInput.addEventListener('input', () => {
+                if (!hasPermission('editClientData')) {
+                    // Revertir al valor original si no tiene permiso
+                    const originalName = clientNameInput.getAttribute('data-original-name') || client.username;
+                    clientNameInput.value = originalName;
+                    console.warn('⚠️ No tienes permiso para editar datos del cliente');
+                    return;
+                }
+                showSaveBar();
+            });
+
+            function showSaveBar() {
+                hasChanges = true;
+                saveChangesBar.classList.add('visible');
+            }
+
+            function hideSaveBar() {
+                hasChanges = false;
+                saveChangesBar.classList.remove('visible');
+            }
+
+            // Save all changes
+            document.getElementById('saveAllBtn').addEventListener('click', async () => {
+                // Obtener clave de acceso del cliente
+                const clientKey = clientKeyInput.value.trim();
+                const originalKey = clientKeyInput.getAttribute('data-original-key') || clientKey;
+                
+                // Validar permisos antes de guardar
+                let canSave = false;
+                let savedSomething = false;
+                
+                // 1. Verificar si puede guardar archivos
+                if (hasPermission('uploadFiles')) {
+                    const photosByCategory = {};
+                    document.querySelectorAll('.category-card').forEach(card => {
+                        const categoryName = card.querySelector('.category-name-input').value;
+                        const filesContainer = card.querySelector('.files-grid');
+                        if (!filesContainer) return;
+                        
+                        const fileItems = filesContainer.querySelectorAll('.file-item');
+                        
+                        const photos = [];
+                        fileItems.forEach(item => {
+                            // Obtener URL desde el data attribute
+                            const fileUrl = item.dataset.fileUrl;
+                            if (fileUrl) {
+                                photos.push(fileUrl);
+                            }
+                        });
+                        
+                        if (photos.length > 0) {
+                            photosByCategory[categoryName] = photos;
+                        }
+                    });
+                    
+                    // Las fotos ya se guardaron individualmente al subirlas
+                    // Solo actualizamos la referencia si es necesario
+                    canSave = true;
+                    savedSomething = true;
+                    
+                }
+                
+                // 2. Actualizar información del cliente
+                const clientId = CONFIG.useDemoMode() ? originalKey : client.id;
+                let clientUpdated = false;
+                const updates = {};
+
+                // Actualizar nombre (siempre permitido, sin necesidad de permiso especial)
+                updates.username = clientNameInput.value.trim();
+                clientUpdated = true;
+                
+                // 3. Verificar si puede editar datos del cliente (nombre y clave)
+                if (hasPermission('editClientData') && clientKey !== originalKey) {
+                    if (CONFIG.useDemoMode()) {
+                        // En modo demo, verificar en localStorage
+                        const clients = JSON.parse(localStorage.getItem('clients') || '[]');
+                        const keyExists = clients.some(c => c.accessCode === clientKey && c.accessCode !== originalKey);
+                        if (keyExists) {
+                            return;
+                        }
+                    } else {
+                        // En modo real, verificar en Supabase
+                        const checkResult = await window.dbService.getClientByAccessCode(clientKey);
+                        if (checkResult.success && checkResult.data && checkResult.data.id !== client.id) {
+                            return;
+                        }
+                    }
+                    
+                    updates.accessCode = clientKey;
+                    clientUpdated = true;
+                }
+                
+                // 4. Verificar si puede gestionar categorías
+                if (hasPermission('manageCategories')) {
+                    const categories = [];
+                    document.querySelectorAll('.category-card').forEach(card => {
+                        const categoryName = card.querySelector('.category-name-input').value;
+                        categories.push(categoryName);
+                    });
+                    updates.categories = categories;
+                    clientUpdated = true;
+                }
+                
+                if (clientUpdated) {
+                    if (CONFIG.useDemoMode()) {
+                        // Modo demo: actualizar localStorage
+                        const clients = JSON.parse(localStorage.getItem('clients') || '[]');
+                        const clientIndex = clients.findIndex(c => c.accessCode === originalKey);
+                        if (clientIndex !== -1) {
+                            Object.assign(clients[clientIndex], updates);
+                            if (updates.accessCode) {
+                                // Mover fotos a la nueva clave
+                                const oldPhotos = localStorage.getItem(`photos_${originalKey}`);
+                                if (oldPhotos) {
+                                    localStorage.setItem(`photos_${clientKey}`, oldPhotos);
+                                    localStorage.removeItem(`photos_${originalKey}`);
+                                }
+                            }
+                            localStorage.setItem('clients', JSON.stringify(clients));
+                        }
+                    } else {
+                        // Modo real: actualizar en Supabase
+                        await window.dbService.updateClient(clientId, updates);
+                    }
+                    canSave = true;
+                    savedSomething = true;
+                }
+                
+                if (!savedSomething) {
+                    return;
+                }
+                hideSaveBar();
+                editMode = false;
+                editToggleBtn.textContent = 'Habilitar Edición';
+                editToggleBtn.style.background = 'var(--gold)';
+                clientNameInput.disabled = true;
+                clientKeyInput.disabled = true;
+                
+                // Actualizar atributos de valores originales
+                clientNameInput.setAttribute('data-original-name', updates.username);
+                clientKeyInput.setAttribute('data-original-key', clientKey);
+            });
+
+            // Cancel changes
+            document.getElementById('cancelChangesBtn').addEventListener('click', () => {
+                location.reload();
+            });
+
+            // --- Eliminar Cliente Completo ---
+            const deleteClientBtn = document.getElementById('deleteClientBtn');
+            if (deleteClientBtn) {
+                deleteClientBtn.addEventListener('click', async (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    // Verificar permisos
+                    if (!hasPermission('createClients')) {
+                        console.warn('⚠️ No tienes permiso para eliminar clientes');
+                        return;
+                    }
+                    
+                    // Confirmar eliminación
+                    const clientName = clientNameInput.value.trim() || client.username || 'este cliente';
+                    const confirmed1 = await window.showConfirm(
+                        `¿Estás SEGURO de que quieres eliminar completamente a "${clientName}"?\n\nEsto eliminará:\n- Todas las fotos del cliente\n- Todas las categorías\n- El cliente completo\n\n⚠️ Esta acción NO se puede deshacer.`,
+                        'Eliminar Cliente',
+                        { type: 'warning', confirmText: 'Sí, eliminar', cancelText: 'Cancelar' }
+                    );
+                    if (!confirmed1) {
+                        return;
+                    }
+                    
+                    // Segunda confirmación
+                    const confirmed2 = await window.showConfirm(
+                        '⚠️ ÚLTIMA CONFIRMACIÓN: ¿Realmente quieres eliminar este cliente y TODAS sus fotos? Esta acción es IRREVERSIBLE.',
+                        'Confirmación Final',
+                        { type: 'error', confirmText: 'Sí, eliminar definitivamente', cancelText: 'Cancelar' }
+                    );
+                    if (!confirmed2) {
+                        return;
+                    }
+                    
+                    deleteClientBtn.disabled = true;
+                    deleteClientBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Eliminando...';
+                    
+                    try {
+                        const clientId = CONFIG.useDemoMode() ? clientKey : client.id;
+                        
+                        // 1. Obtener todas las fotos del cliente
+                        console.log('📸 Obteniendo todas las fotos del cliente...');
+                        const photosResult = await window.dbService.getClientPhotos(clientId);
+                        
+                        if (photosResult.success) {
+                            // 2. Eliminar todas las fotos
+                            let deletedPhotos = 0;
+                            let errorPhotos = 0;
+                            
+                            for (const categoryPhotos of Object.values(photosResult.data)) {
+                                for (const photo of categoryPhotos) {
+                                    try {
+                                        const photoId = photo.id;
+                                        const r2Key = photo.r2_key;
+                                        
+                                        // Eliminar de Supabase
+                                        if (photoId) {
+                                            await window.dbService.deletePhoto(photoId);
+                                        }
+                                        
+                                        // Eliminar de R2
+                                        if (r2Key && window.uploadService) {
+                                            await window.uploadService.deleteImage(r2Key);
+                                        }
+                                        
+                                        deletedPhotos++;
+                                    } catch (error) {
+                                        console.error('❌ Error eliminando foto:', error);
+                                        errorPhotos++;
+                                    }
+                                }
+                            }
+                            
+                            console.log(`✅ Eliminadas ${deletedPhotos} fotos del cliente`);
+                            if (errorPhotos > 0) {
+                                console.warn(`⚠️ ${errorPhotos} fotos no se pudieron eliminar`);
+                            }
+                        }
+                        
+                        // 3. Eliminar el cliente
+                        console.log('🗑️ Eliminando cliente...');
+                        const deleteResult = await window.dbService.deleteClient(clientId);
+                        
+                        if (deleteResult.success) {
+                            console.log('✅ Cliente eliminado exitosamente');
+                            // Redirigir a la lista de clientes
+                            window.location.href = 'mis-clientes.html';
+                        } else {
+                            console.error('❌ Error al eliminar cliente:', deleteResult.error);
+                            window.showAlert('Error al eliminar el cliente. Por favor, inténtalo de nuevo.', 'error');
+                            deleteClientBtn.disabled = false;
+                            deleteClientBtn.innerHTML = 'Eliminar Cliente';
+                        }
+                    } catch (error) {
+                        console.error('❌ Error al eliminar cliente:', error);
+                        window.showAlert('Error al eliminar el cliente. Por favor, inténtalo de nuevo.', 'error');
+                        deleteClientBtn.disabled = false;
+                        deleteClientBtn.innerHTML = 'Eliminar Cliente';
+                    }
+                });
+            }
+
+            // Add new category
+            addCategoryBtn.addEventListener('click', () => {
+                if (!hasPermission('manageCategories')) {
+                    return;
+                }
+                const newCategoryId = categoryIdCounter++;
+                const newCategory = createCategoryElement(newCategoryId, 'Nueva Categoría');
+                categoriesContainer.appendChild(newCategory);
+                initializeCategoryEvents(newCategory);
+                showSaveBar();
+            });
+
+            function createCategoryElement(id, name) {
+                const div = document.createElement('div');
+                div.className = 'category-card';
+                div.setAttribute('data-category-id', id);
+                div.innerHTML = `
+                    <div class="category-header">
+                        <div class="category-title-group">
+                            <input type="text" class="category-name-input" value="${name}" disabled data-original="${name}">
+                        </div>
+                        <div class="category-actions">
+                            <button class="category-btn btn-edit edit-category-btn">Editar</button>
+                            <button class="category-btn btn-delete delete-category-btn">Eliminar Categoría</button>
+                            <button class="category-btn btn-delete-photos delete-photos-btn" style="background: #ff9800; color: white;" title="Eliminar todas las fotos de esta categoría">
+                                <i class="fas fa-trash-alt"></i> Eliminar Fotos
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <label class="upload-area" data-category="${id}" style="cursor: pointer;">
+                        <input type="file" multiple accept="image/*,video/*" style="display: none;" class="file-input">
+                        <div class="upload-icon"><i class="fas fa-cloud-upload-alt"></i></div>
+                        <div class="upload-text">Haz clic o arrastra archivos aquí</div>
+                        <div class="upload-hint">Imágenes y videos aceptados (JPG, PNG, MP4, MOV)</div>
+                    </label>
+                    
+                    <div class="files-grid" data-files-container="${id}">
+                    </div>
+                `;
+                return div;
+            }
+
+            function initializeCategoryEvents(categoryCard) {
+                const editBtn = categoryCard.querySelector('.edit-category-btn');
+                const deleteBtn = categoryCard.querySelector('.delete-category-btn');
+                const nameInput = categoryCard.querySelector('.category-name-input');
+                const uploadArea = categoryCard.querySelector('.upload-area');
+                const fileInput = categoryCard.querySelector('.file-input');
+                const filesContainer = categoryCard.querySelector('.files-grid');
+
+                // Verificar que todos los elementos existan
+                if (!editBtn || !deleteBtn || !nameInput || !uploadArea || !fileInput || !filesContainer) {
+                    console.error('❌ Error: No se encontraron todos los elementos de la categoría:', {
+                        editBtn: !!editBtn,
+                        deleteBtn: !!deleteBtn,
+                        nameInput: !!nameInput,
+                        uploadArea: !!uploadArea,
+                        fileInput: !!fileInput,
+                        filesContainer: !!filesContainer
+                    });
+                    return;
+                }
+
+                console.log('✅ Elementos encontrados para categoría:', {
+                    hasUploadArea: !!uploadArea,
+                    hasFileInput: !!fileInput,
+                    uploadAreaHtml: uploadArea.outerHTML.substring(0, 100)
+                });
+
+                // Restringir según permisos
+                if (!hasPermission('manageCategories')) {
+                    editBtn.style.display = 'none';
+                    deleteBtn.style.display = 'none';
+                }
+                
+                // Restringir botón de eliminar fotos según permisos
+                const deletePhotosBtn = categoryCard.querySelector('.delete-photos-btn');
+                if (deletePhotosBtn) {
+                    if (!hasPermission('uploadFiles')) {
+                        deletePhotosBtn.style.display = 'none';
+                    }
+                }
+
+                if (!hasPermission('uploadFiles')) {
+                    uploadArea.style.opacity = '0.5';
+                    uploadArea.style.cursor = 'not-allowed';
+                    uploadArea.style.pointerEvents = 'none';
+                    console.warn('⚠️ No tienes permiso uploadFiles - El área de subida está deshabilitada');
+                } else {
+                    // Asegurar que el área de subida es clickeable
+                    uploadArea.style.pointerEvents = 'auto';
+                    uploadArea.style.cursor = 'pointer';
+                }
+
+                // Edit category name
+                editBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (!hasPermission('manageCategories')) {
+                        return;
+                    }
+                    if (nameInput.disabled) {
+                        nameInput.disabled = false;
+                        nameInput.focus();
+                        nameInput.select();
+                        editBtn.textContent = 'Guardar';
+                        editBtn.classList.remove('btn-edit');
+                        editBtn.classList.add('btn-save');
+                    } else {
+                        nameInput.disabled = true;
+                        editBtn.textContent = 'Editar';
+                        editBtn.classList.remove('btn-save');
+                        editBtn.classList.add('btn-edit');
+                        showSaveBar();
+                    }
+                });
+
+                // Delete category
+                deleteBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (!hasPermission('manageCategories')) {
+                        return;
+                    }
+                    // Eliminar sin confirmación
+                    categoryCard.remove();
+                    showSaveBar();
+                });
+                
+                // Delete all photos in category
+                if (deletePhotosBtn) {
+                    deletePhotosBtn.addEventListener('click', async (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        if (!hasPermission('uploadFiles')) {
+                            console.warn('⚠️ No tienes permiso para eliminar fotos');
+                            return;
+                        }
+                        
+                        const categoryName = nameInput.value.trim();
+                        if (!categoryName) return;
+                        
+                        // Confirmar eliminación
+                        const confirmed = await window.showConfirm(
+                            `¿Estás seguro de que quieres eliminar TODAS las fotos de la categoría "${categoryName}"? Esta acción no se puede deshacer.`,
+                            'Eliminar Fotos de Categoría',
+                            { type: 'warning', confirmText: 'Sí, eliminar', cancelText: 'Cancelar' }
+                        );
+                        if (!confirmed) {
+                            return;
+                        }
+                        
+                        deletePhotosBtn.disabled = true;
+                        deletePhotosBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Eliminando...';
+                        
+                        try {
+                            // Obtener todas las fotos de esta categoría
+                            const clientId = CONFIG.useDemoMode() ? clientKey : client.id;
+                            const photosResult = await window.dbService.getClientPhotos(clientId, categoryName);
+                            
+                            if (photosResult.success && photosResult.data[categoryName]) {
+                                const photos = photosResult.data[categoryName];
+                                let deletedCount = 0;
+                                let errorCount = 0;
+                                
+                                // Eliminar cada foto
+                                for (const photo of photos) {
+                                    try {
+                                        const photoId = photo.id;
+                                        const r2Key = photo.r2_key;
+                                        
+                                        // Eliminar de Supabase
+                                        if (photoId) {
+                                            await window.dbService.deletePhoto(photoId);
+                                        }
+                                        
+                                        // Eliminar de R2
+                                        if (r2Key && window.uploadService) {
+                                            await window.uploadService.deleteImage(r2Key);
+                                        }
+                                        
+                                        deletedCount++;
+                                    } catch (error) {
+                                        console.error('❌ Error eliminando foto:', error);
+                                        errorCount++;
+                                    }
+                                }
+                                
+                                console.log(`✅ Eliminadas ${deletedCount} fotos de la categoría "${categoryName}"`);
+                                if (errorCount > 0) {
+                                    console.warn(`⚠️ ${errorCount} fotos no se pudieron eliminar`);
+                                }
+                                
+                                // Recargar datos del cliente
+                                await loadClientData();
+                            }
+                        } catch (error) {
+                            console.error('❌ Error al eliminar fotos de la categoría:', error);
+                        } finally {
+                            deletePhotosBtn.disabled = false;
+                            deletePhotosBtn.innerHTML = '<i class="fas fa-trash-alt"></i> Eliminar Fotos';
+                        }
+                    });
+                }
+
+                // Upload area click - usar label en lugar de click programático
+                // Con label, el click automáticamente activa el input
+                // Solo necesitamos manejar drag & drop y verificar permisos
+                uploadArea.addEventListener('click', (e) => {
+                    // No interferir si el click viene de un botón u otro elemento interactivo
+                    if (e.target.closest('button') || e.target.closest('.category-actions')) {
+                        return;
+                    }
+                    
+                    if (!hasPermission('uploadFiles')) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        console.warn('⚠️ No tienes permiso para subir archivos');
+                        return;
+                    }
+                    // Si es un label, el click ya activará el input automáticamente
+                    // No necesitamos hacer nada más
+                });
+
+                // File input change
+                fileInput.addEventListener('change', async (e) => {
+                    console.log('📁 Archivo seleccionado:', e.target.files.length);
+                    if (!hasPermission('uploadFiles')) {
+                        console.warn('⚠️ No tienes permiso para subir archivos');
+                        return;
+                    }
+                    if (!filesContainer) {
+                        console.error('❌ filesContainer no encontrado');
+                        return;
+                    }
+                    const categoryName = categoryCard.querySelector('.category-name-input').value;
+                    console.log('📂 Categoría:', categoryName, 'Container:', filesContainer);
+                    await handleFiles(e.target.files, filesContainer, categoryName);
+                    e.target.value = ''; // Reset input
+                });
+
+                // Drag and drop
+                uploadArea.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    uploadArea.classList.add('dragover');
+                });
+
+                uploadArea.addEventListener('dragleave', () => {
+                    uploadArea.classList.remove('dragover');
+                });
+
+                uploadArea.addEventListener('drop', async (e) => {
+                    e.preventDefault();
+                    uploadArea.classList.remove('dragover');
+                    if (!hasPermission('uploadFiles')) {
+                        return;
+                    }
+                    const categoryName = categoryCard.querySelector('.category-name-input').value;
+                    await handleFiles(e.dataTransfer.files, filesContainer, categoryName);
+                });
+            }
+
+            async function handleFiles(files, container, categoryName) {
+                console.log('📤 handleFiles llamado:', {
+                    filesCount: files.length,
+                    container: container ? '✅' : '❌',
+                    categoryName: categoryName
+                });
+                
+                if (!container) {
+                    console.error('❌ Container no válido en handleFiles');
+                    return;
+                }
+                
+                // Verificar que uploadService esté disponible - esperar hasta 5 segundos
+                if (!window.uploadService) {
+                    console.log('⏳ UploadService no está disponible. Esperando...');
+                    let attempts = 0;
+                    const maxAttempts = 50; // 5 segundos (50 * 100ms)
+                    
+                    while (!window.uploadService && attempts < maxAttempts) {
+                        await new Promise(resolve => setTimeout(resolve, 100));
+                        attempts++;
+                    }
+                    
+                    if (!window.uploadService) {
+                        console.error('❌ UploadService no se pudo cargar después de 5 segundos');
+                        console.error('⚠️ Verifica que upload.js se esté cargando correctamente');
+                        return;
+                    }
+                    
+                    console.log('✅ UploadService disponible después de esperar');
+                }
+
+                for (const file of Array.from(files)) {
+                    // Validar archivo
+                    const validation = window.uploadService.validateFile(file);
+                    if (!validation.valid) {
+                        continue;
+                    }
+
+                    // Crear elemento de carga
+                    const loadingItem = createLoadingFileItem(file);
+                    container.appendChild(loadingItem);
+
+                    try {
+                        // Subir archivo
+                        // IMPORTANTE: Usar siempre client.id (UUID de Supabase) si existe
+                        const clientId = client.id || clientKey;
+                        console.log('📤 Iniciando subida de imagen:', file.name);
+                        console.log('🆔 Client ID para subida:', clientId, 'client.id:', client.id, 'clientKey:', clientKey);
+                        const uploadResult = await window.uploadService.uploadImage(
+                            file,
+                            clientId,
+                            categoryName,
+                            (percent) => {
+                                // Actualizar progreso
+                                const progressBar = loadingItem.querySelector('.upload-progress-bar');
+                                if (progressBar) {
+                                    progressBar.style.width = percent + '%';
+                                }
+                            }
+                        );
+
+                        if (uploadResult.success) {
+                            // Guardar referencia en base de datos
+                            // IMPORTANTE: Usar siempre client.id (UUID de Supabase) si existe, no clientKey
+                            // En modo real, client.id es el UUID de Supabase que se necesita para la consulta
+                            const clientIdForSave = client.id || clientKey;
+                            console.log('💾 Guardando foto con clientId:', clientIdForSave);
+                            console.log('🔍 Detalles - client.id:', client.id, 'clientKey:', clientKey, 'useDemoMode:', CONFIG.useDemoMode());
+                            
+                            // Verificar que uploadResult.url sea una URL de R2, no datos base64
+                            if (uploadResult.url && uploadResult.url.startsWith('data:')) {
+                                console.error('❌ ERROR: Se intentó guardar una imagen base64 en lugar de URL de R2');
+                                console.error('URL recibida:', uploadResult.url.substring(0, 100) + '...');
+                                loadingItem.remove();
+                                continue;
+                            }
+                            
+                            // Verificar que la URL sea de R2
+                            if (!uploadResult.url || (!uploadResult.url.startsWith('http') && !uploadResult.url.startsWith('https'))) {
+                                console.error('❌ ERROR: URL inválida:', uploadResult.url);
+                                loadingItem.remove();
+                                continue;
+                            }
+                            
+                            console.log('💾 Guardando solo la URL en Supabase:', uploadResult.url);
+                            console.log('📊 Datos a guardar:', {
+                                clientId: clientIdForSave,
+                                category: categoryName,
+                                r2Url: uploadResult.url,
+                                fileName: uploadResult.fileName,
+                                fileSize: uploadResult.fileSize,
+                                mimeType: uploadResult.mimeType
+                            });
+                            
+                            const saveResult = await window.dbService.savePhoto({
+                                clientId: clientIdForSave,
+                                category: categoryName,
+                                r2Url: uploadResult.url, // Solo la URL, NO la imagen
+                                fileName: uploadResult.fileName,
+                                fileSize: uploadResult.fileSize,
+                                mimeType: uploadResult.mimeType
+                            });
+                            
+                            console.log('💾 Resultado de guardar foto en Supabase:', saveResult);
+
+                            if (saveResult.success) {
+                                // Reemplazar loading por el item final
+                                loadingItem.remove();
+                                console.log('🖼️ Creando elemento de imagen con URL:', uploadResult.url);
+                                
+                                // Extraer el key de R2 de la URL
+                                let r2Key = uploadResult.key || null;
+                                if (!r2Key && uploadResult.url) {
+                                    try {
+                                        const url = new URL(uploadResult.url);
+                                        r2Key = url.pathname.substring(1);
+                                    } catch (e) {
+                                        console.warn('⚠️ No se pudo extraer key de R2 de la URL');
+                                    }
+                                }
+                                
+                                // Obtener el ID de la foto guardada
+                                const photoId = saveResult.data?.id || null;
+                                
+                                const fileItem = createFileItemFromUrl(uploadResult.url, file.name, photoId, r2Key);
+                                container.appendChild(fileItem);
+                                showSaveBar();
+
+                            } else {
+                                loadingItem.remove();
+                            }
+                        } else {
+                            loadingItem.remove();
+                        }
+                    } catch (error) {
+                        console.error('Error en upload:', error);
+                        loadingItem.remove();
+                    }
+                }
+            }
+
+            function createFileItem(file) {
+                const div = document.createElement('div');
+                div.className = 'file-item';
+                
+                const isVideo = file.type.startsWith('video/');
+                const reader = new FileReader();
+                
+                reader.onload = (e) => {
+                    const fileUrl = e.target.result; // Data URL
+                    div.dataset.fileUrl = fileUrl; // Guardar URL en el data attribute
+
+                    if (isVideo) {
+                        div.innerHTML = `
+                            <div class="file-preview">
+                                <video src="${fileUrl}" style="width: 100%; height: 100%; object-fit: cover;"></video>
+                                <div class="video-icon"><i class="fas fa-play-circle"></i></div>
+                            </div>
+                            <button class="file-remove" title="Eliminar"><i class="fas fa-times"></i></button>
+                        `;
+                    } else {
+                        div.innerHTML = `
+                            <div class="file-preview">
+                                <img src="${fileUrl}" alt="Preview">
+                            </div>
+                            <button class="file-remove" title="Eliminar"><i class="fas fa-times"></i></button>
+                        `;
+                    }
+                    
+                    div.querySelector('.file-remove').addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        if (!hasPermission('uploadFiles')) {
+                            return;
+                        }
+                        div.remove();
+                        showSaveBar();
+                    });
+                };
+                
+                reader.readAsDataURL(file);
+                return div;
+            }
+
+            function formatFileSize(bytes) {
+                if (bytes === 0) return '0 Bytes';
+                const k = 1024;
+                const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+                const i = Math.floor(Math.log(bytes) / Math.log(k));
+                return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+            }
+
+            // --- Botón de Logout ---
+            const logoutBtn = document.querySelector('.logout-btn');
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', async (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('🚪 Click en botón Salir');
+                    
+                    if (window.authService && typeof window.authService.logout === 'function') {
+                        try {
+                            window.authService.logout();
+                        } catch (error) {
+                            console.error('❌ Error al hacer logout:', error);
+                            sessionStorage.clear();
+                            window.location.href = '../client/area-clientes.html';
+                        }
+                    } else {
+                        console.warn('⚠️ authService no disponible, usando fallback');
+                        sessionStorage.clear();
+                        window.location.href = '../client/area-clientes.html';
+                    }
+                });
+            }
+        });
+    </script>
+
+    <style>
+        /* Ajustes específicos para Gestor de Cliente */
+        .client-info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+        }
+
+        @media (max-width: 968px) {
+            .category-card {
+                margin-bottom: 1.5rem;
+            }
+
+            .category-header {
+                flex-direction: column;
+                gap: 1rem;
+                align-items: flex-start;
+            }
+
+            .category-actions {
+                width: 100%;
+                justify-content: flex-start;
+            }
+
+            .save-changes-bar {
+                flex-direction: column;
+                gap: 1rem;
+                padding: 1rem;
+            }
+
+            .save-changes-actions {
+                width: 100%;
+                flex-direction: column;
+            }
+
+            .btn-cancel,
+            .btn-save-all {
+                width: 100%;
+                padding: 0.7rem 1.5rem;
+                font-size: 0.9rem;
+            }
+
+            .save-changes-actions {
+                flex-direction: column;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .client-editor-header {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .edit-mode-toggle,
+            .add-category-btn {
+                width: 100%;
+            }
+
+            .category-title-group input {
+                font-size: 0.9rem;
+            }
+
+            .files-grid {
+                grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+                gap: 0.75rem;
+            }
+
+            .file-item {
+                height: 100px;
+            }
+        }
+    </style>
+
+</body>
+</html>

@@ -1,0 +1,14 @@
+{
+    "redirects": [
+      {
+        "source": "/",
+        "destination": "/pages/client/area-clientes.html",
+        "permanent": false
+      },
+      {
+        "source": "/pages/public/:match*",
+        "destination": "/pages/client/area-clientes.html",
+        "permanent": false
+      }
+    ]
+  }

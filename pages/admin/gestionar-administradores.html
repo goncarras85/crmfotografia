@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Administradores - CL Fotógrafos</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="../../css/style.css">
+    <script src="../../js/notifications.js" defer></script>
+    <script src="../../js/modals.js"></script>
+    <!-- Servicios de Backend -->
+    <script src="../../js/config.js"></script>
+    <script src="../../js/auth.js"></script>
+    <script src="../../js/db.js"></script>
+    <style>
+        /* Moderno Settings Container */
+        .settings-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .settings-grid {
+            display: grid;
+            gap: 2rem;
+        }
+
+        /* Modern Card Design */
+        .settings-card {
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 2.5rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+            border: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+            outline: none !important;
+        }
+
+        .settings-card:hover {
+            box-shadow: 0 4px 16px rgba(161, 140, 90, 0.1);
+            border-color: var(--gold);
+        }
+
+        .settings-card:focus,
+        .settings-card:focus-visible {
+            outline: none !important;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04) !important;
+        }
+
+        .settings-card-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .settings-card-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, var(--gold) 0%, #8a7548 100%);
+            color: white;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1.25rem;
+            outline: none !important;
+        }
+
+        .settings-card-icon:focus,
+        .settings-card-icon:focus-visible {
+            outline: none !important;
+            box-shadow: none !important;
+        }
+
+        .settings-card-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 0;
+        }
+
+        /* Admin Table Modern */
+        .modern-admin-table {
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 2.5rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+            border: 1px solid var(--border-color);
+        }
+
+        .modern-admin-table-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .modern-admin-table-header h2 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 0;
+        }
+
+        .modern-admin-table table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .modern-admin-table thead th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .modern-admin-table tbody td {
+            padding: 1.25rem 1rem;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-primary);
+        }
+
+        .modern-admin-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .modern-admin-table tbody tr:hover {
+            background: #fafafa;
+        }
+
+        @media (max-width: 768px) {
+            .settings-container {
+                padding: 1rem;
+            }
+            .modern-admin-table-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+            .modern-admin-table table {
+                font-size: 0.875rem;
+            }
+            .modern-admin-table thead th,
+            .modern-admin-table tbody td {
+                padding: 0.75rem 0.5rem;
+            }
+        }
+
+        /* Permission Cards */
+        .modern-permission-card {
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+            padding: 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            margin-bottom: 0.75rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: #fafafa;
+            outline: none !important;
+        }
+
+        .modern-permission-card:hover {
+            border-color: var(--gold);
+            background: #fff;
+        }
+
+        .modern-permission-card:focus,
+        .modern-permission-card:focus-visible {
+            outline: none !important;
+            box-shadow: none !important;
+        }
+
+        .modern-permission-checkbox {
+            margin-top: 0.25rem;
+            cursor: pointer;
+            width: 20px;
+            height: 20px;
+            accent-color: var(--gold);
+            outline: none !important;
+        }
+        
+        .modern-permission-checkbox:focus,
+        .modern-permission-checkbox:focus-visible {
+            outline: 2px solid var(--gold) !important;
+            outline-offset: 2px;
+        }
+        
+        /* Asegurar que no hay resplandor rosa en ningún estado */
+        .modern-permission-card *:focus,
+        .modern-permission-card *:focus-visible,
+        .modern-permission-card *:active,
+        .modern-permission-card *:focus-within {
+            outline: none !important;
+            box-shadow: none !important;
+        }
+        
+        /* Eliminar cualquier estilo de focus en todo el contenedor de permisos */
+        .settings-card:has(.modern-permission-card):focus,
+        .settings-card:has(.modern-permission-card):focus-within {
+            outline: none !important;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04) !important;
+        }
+        
+        /* Eliminar cualquier resplandor rosa en todos los elementos */
+        *:focus,
+        *:focus-visible,
+        *:active {
+            outline-color: transparent !important;
+        }
+        
+        .modern-permission-card *,
+        .settings-card * {
+            outline-color: transparent !important;
+        }
+
+        .modern-permission-info {
+            flex: 1;
+        }
+
+        .modern-permission-info h4 {
+            margin: 0 0 0.25rem 0;
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .modern-permission-info p {
+            margin: 0;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .modern-action-btn {
+            background: none;
+            border: none;
+            color: var(--gold);
+            font-size: 1.25rem;
+            cursor: pointer;
+            padding: 0.5rem;
+            transition: all 0.2s ease;
+            border-radius: 4px;
+        }
+
+        .modern-action-btn:hover {
+            background: #f5f5f5;
+            transform: scale(1.1);
+        }
+
+        .modern-save-btn {
+            background: linear-gradient(135deg, var(--gold) 0%, #8a7548 100%);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(184, 134, 11, 0.2);
+        }
+
+        .modern-save-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(184, 134, 11, 0.3);
+        }
+    </style>
+</head>
+<body class="admin-panel-body">
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-logo">CL<span>.</span>FOTÓGRAFOS</div>
+        <nav class="sidebar-nav">
+            <ul>
+                <li><a href="admin-panel.html">Dashboard</a></li>
+                <li><a href="mis-clientes.html">Mis Clientes</a></li>
+                <li><a href="gestionar-administradores.html" class="active">Administradores</a></li>
+                <li><a href="ajustes-admin.html">Ajustes</a></li>
+            </ul>
+        </nav>
+        <div class="sidebar-footer">
+            <div class="admin-profile">
+                <div class="admin-profile-avatar"></div>
+                <div class="admin-profile-info">
+                    <p id="adminNameDisplay">C. Lorenzo</p>
+                    <span>Admin</span>
+                </div>
+            </div>
+            <button class="logout-btn" id="logoutBtn">Salir</button>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="settings-container">
+            <div class="settings-grid">
+                
+                <!-- Gestor de Administradores -->
+                <div class="modern-admin-table">
+                    <div class="modern-admin-table-header">
+                        <h2>Gestor de Administradores</h2>
+                        <button class="modern-save-btn" id="addAdminBtn">
+                            + Nuevo Administrador
+                        </button>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Nombre</th>
+                                <th>Email</th>
+                                <th>Permisos</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="adminsList">
+                            <!-- Administradores se cargarán aquí -->
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal Nuevo Administrador -->
+    <div class="modal-backdrop" id="adminModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 id="modalTitle">Crear Nuevo Administrador</h2>
+            </div>
+
+            <div class="modal-content">
+                <section class="modal-section">
+                    <div class="form-group">
+                        <label for="adminNameModal">Nombre Completo</label>
+                        <input type="text" id="adminNameModal" placeholder="Ej: María García">
+                    </div>
+                    <div class="form-group">
+                        <label for="adminEmailModal">Email</label>
+                        <input type="email" id="adminEmailModal" placeholder="maria@ejemplo.com">
+                    </div>
+                    <div class="form-group">
+                        <label for="adminPasswordModal">Contraseña</label>
+                        <input type="password" id="adminPasswordModal" placeholder="Mínimo 6 caracteres">
+                    </div>
+                </section>
+
+                <section class="modal-section">
+                    <div class="form-group">
+                        <label style="margin-bottom: 1rem; display: block;">Permisos del Administrador</label>
+                        
+                        <label class="modern-permission-card admin-permission">
+                            <input type="checkbox" class="modern-permission-checkbox permission-checkbox" data-permission="admin">
+                            <div class="modern-permission-info">
+                                <h4>Administrador Total</h4>
+                                <p>Acceso completo al sistema. Puede gestionar otros administradores y tiene todos los permisos.</p>
+                            </div>
+                        </label>
+                        
+                        <label class="modern-permission-card">
+                            <input type="checkbox" class="modern-permission-checkbox permission-checkbox" data-permission="createClients">
+                            <div class="modern-permission-info">
+                                <h4>Crear Clientes</h4>
+                                <p>Puede crear nuevos clientes y sus galerías personalizadas.</p>
+                            </div>
+                        </label>
+                        
+                        <label class="modern-permission-card">
+                            <input type="checkbox" class="modern-permission-checkbox permission-checkbox" data-permission="uploadFiles">
+                            <div class="modern-permission-info">
+                                <h4>Subir Archivos</h4>
+                                <p>Puede subir fotos y videos a las galerías de los clientes.</p>
+                            </div>
+                        </label>
+                        
+                        <label class="modern-permission-card">
+                            <input type="checkbox" class="modern-permission-checkbox permission-checkbox" data-permission="manageCategories">
+                            <div class="modern-permission-info">
+                                <h4>Gestionar Categorías</h4>
+                                <p>Puede crear, editar y eliminar categorías de las galerías.</p>
+                            </div>
+                        </label>
+                        
+                        <label class="modern-permission-card">
+                            <input type="checkbox" class="modern-permission-checkbox permission-checkbox" data-permission="editClientData">
+                            <div class="modern-permission-info">
+                                <h4>Editar Datos del Cliente</h4>
+                                <p>Puede editar el nombre del área y la clave de acceso de los clientes.</p>
+                            </div>
+                        </label>
+                    </div>
+                </section>
+            </div>
+
+            <div class="modal-footer">
+                <button class="modal-btn modal-btn-cancel" id="closeAdminModalBtn">Cancelar</button>
+                <button class="modal-btn modal-btn-create" id="saveAdminBtn">Guardar Administrador</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Verificar sesión de administrador
+            const adminSession = sessionStorage.getItem('adminSession');
+            if (!adminSession) {
+                window.location.href = '../client/area-clientes.html';
+                return;
+            }
+
+            const session = JSON.parse(adminSession);
+            const isSupremo = session.isSupremo === true || session.permissions === 'all';
+            const permissions = session.permissions;
+            
+            // Actualizar nombre del admin en el sidebar
+            const adminNameDisplay = document.getElementById('adminNameDisplay');
+            if (adminNameDisplay) {
+                if (session.name) {
+                    adminNameDisplay.textContent = session.name;
+                } else if (session.email) {
+                    // Fallback: usar email si no hay nombre
+                    adminNameDisplay.textContent = session.email.split('@')[0];
+                }
+            }
+
+            // Función para verificar si tiene permiso de administrador
+            function canManageAdmins() {
+                // Admin supremo siempre puede gestionar
+                if (isSupremo) return true;
+                // Si permissions es 'all', puede gestionar
+                if (permissions === 'all') return true;
+                // Si tiene permiso 'admin', puede gestionar
+                if (Array.isArray(permissions) && permissions.includes('admin')) return true;
+                // Por compatibilidad: todos los admins pueden gestionar por ahora
+                return true;
+            }
+            
+            const modal = document.getElementById('adminModal');
+            const addAdminBtn = document.getElementById('addAdminBtn');
+            const closeModalBtn = document.getElementById('closeAdminModalBtn');
+            const saveAdminBtn = document.getElementById('saveAdminBtn');
+            const adminsList = document.getElementById('adminsList');
+            
+            let editingAdminId = null;
+
+            // --- Administrators Management ---
+            async function getAdministrators() {
+                if (CONFIG && CONFIG.useDemoMode && CONFIG.useDemoMode()) {
+                    return JSON.parse(localStorage.getItem('administrators') || '[]');
+                }
+                
+                // Obtener desde Supabase usando dbService
+                if (window.dbService) {
+                    const result = await window.dbService.getAllAdmins();
+                    if (result.success) {
+                        // Convertir formato Supabase a formato interno
+                        return result.data.map(admin => ({
+                            id: admin.id,
+                            name: admin.name,
+                            email: admin.email,
+                            password: admin.password,
+                            permissions: admin.permissions || [],
+                            isSupremo: admin.is_supremo || false,
+                            createdAt: admin.created_at || admin.createdAt
+                        }));
+                    }
+                }
+                
+                return [];
+            }
+
+            async function saveAdministrators(admin) {
+                if (CONFIG && CONFIG.useDemoMode && CONFIG.useDemoMode()) {
+                    const admins = JSON.parse(localStorage.getItem('administrators') || '[]');
+                    admins.push(admin);
+                    localStorage.setItem('administrators', JSON.stringify(admins));
+                    return { success: true };
+                }
+                
+                // Guardar en Supabase usando dbService
+                if (window.dbService) {
+                    return await window.dbService.createAdmin(admin);
+                }
+                
+                return { success: false };
+            }
+
+            async function updateAdministrator(adminId, updates) {
+                if (CONFIG && CONFIG.useDemoMode && CONFIG.useDemoMode()) {
+                    const admins = JSON.parse(localStorage.getItem('administrators') || '[]');
+                    const index = admins.findIndex(a => a.id === adminId);
+                    if (index !== -1) {
+                        admins[index] = { ...admins[index], ...updates };
+                        localStorage.setItem('administrators', JSON.stringify(admins));
+                    }
+                    return { success: true };
+                }
+                
+                if (window.dbService) {
+                    return await window.dbService.updateAdmin(adminId, updates);
+                }
+                
+                return { success: false };
+            }
+
+            async function deleteAdministrator(adminId) {
+                if (CONFIG && CONFIG.useDemoMode && CONFIG.useDemoMode()) {
+                    const admins = JSON.parse(localStorage.getItem('administrators') || '[]');
+                    const filtered = admins.filter(a => a.id !== adminId);
+                    localStorage.setItem('administrators', JSON.stringify(filtered));
+                    return { success: true };
+                }
+                
+                if (window.dbService) {
+                    return await window.dbService.deleteAdmin(adminId);
+                }
+                
+                return { success: false };
+            }
+
+            async function renderAdministrators() {
+                const admins = await getAdministrators();
+                
+                if (admins.length === 0) {
+                    adminsList.innerHTML = `
+                        <tr>
+                            <td colspan="4" style="text-align: center; padding: 3rem; color: var(--text-secondary);">
+                                <div style="font-size: 1.1rem; font-weight: 600; margin-bottom: 0.5rem;">No hay administradores adicionales</div>
+                                <div style="font-size: 0.9rem;">Crea un nuevo administrador para delegar tareas</div>
+                            </td>
+                        </tr>`;
+                    return;
+                }
+
+                adminsList.innerHTML = admins.map(admin => {
+                    const permissionLabels = {
+                        admin: 'Administrador Total',
+                        createClients: 'Crear Clientes',
+                        uploadFiles: 'Subir Archivos',
+                        manageCategories: 'Gestionar Categorías',
+                        editClientData: 'Editar Datos del Cliente'
+                    };
+                    
+                    let permissionsText;
+                    if (admin.permissions.includes('admin')) {
+                        permissionsText = '<strong style="color: var(--gold);">Admin Total</strong>';
+                    } else {
+                        permissionsText = admin.permissions
+                            .map(p => permissionLabels[p])
+                            .filter(p => p)
+                            .join(', ') || '<span style="color: #999;">Sin permisos</span>';
+                    }
+
+                    return `
+                        <tr>
+                            <td><strong>${admin.name}</strong></td>
+                            <td>${admin.email}</td>
+                            <td style="font-size: 0.875rem;">${permissionsText}</td>
+                            <td>
+                                <button class="modern-action-btn" onclick="editAdmin('${admin.id}')" title="Editar">✎</button>
+                                <button class="modern-action-btn" onclick="deleteAdmin('${admin.id}')" title="Eliminar" style="color: #f44336;">✕</button>
+                            </td>
+                        </tr>`;
+                }).join('');
+            }
+
+            // Lógica para el checkbox "admin"
+            const adminCheckbox = document.querySelector('[data-permission="admin"]');
+            const otherCheckboxes = document.querySelectorAll('.permission-checkbox:not([data-permission="admin"])');
+
+            if (adminCheckbox && otherCheckboxes.length > 0) {
+                adminCheckbox.addEventListener('change', function() {
+                    if (this.checked) {
+                        otherCheckboxes.forEach(cb => {
+                            cb.checked = true;
+                            cb.disabled = true;
+                            cb.parentElement.style.opacity = '0.6';
+                        });
+                    } else {
+                        otherCheckboxes.forEach(cb => {
+                            cb.disabled = false;
+                            cb.parentElement.style.opacity = '1';
+                        });
+                    }
+                });
+            }
+
+            // Open modal
+            addAdminBtn.addEventListener('click', () => {
+                editingAdminId = null;
+                document.getElementById('modalTitle').textContent = 'Crear Nuevo Administrador';
+                document.getElementById('adminNameModal').value = '';
+                document.getElementById('adminEmailModal').value = '';
+                document.getElementById('adminPasswordModal').value = '';
+                document.querySelectorAll('.permission-checkbox').forEach(cb => {
+                    cb.checked = false;
+                    cb.disabled = false;
+                    cb.parentElement.style.opacity = '1';
+                });
+                modal.classList.add('visible');
+            });
+
+            // Close modal
+            closeModalBtn.addEventListener('click', () => {
+                modal.classList.remove('visible');
+            });
+
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) modal.classList.remove('visible');
+            });
+
+            // Save administrator
+            saveAdminBtn.addEventListener('click', async () => {
+                const name = document.getElementById('adminNameModal').value.trim();
+                const email = document.getElementById('adminEmailModal').value.trim();
+                const password = document.getElementById('adminPasswordModal').value.trim();
+
+                // Validación diferente para crear vs editar
+                if (!editingAdminId) {
+                    // Al crear, password es obligatorio
+                    if (!name || !email || !password) {
+                        return;
+                    }
+                } else {
+                    // Al editar, solo nombre y email son obligatorios
+                    if (!name || !email) {
+                        return;
+                    }
+                }
+
+                const permissions = Array.from(document.querySelectorAll('.permission-checkbox:checked'))
+                    .map(cb => cb.dataset.permission);
+
+                if (editingAdminId) {
+                    // Actualizar administrador existente
+                    // Solo incluir password si no está vacío
+                    const updates = {
+                        name,
+                        email,
+                        permissions
+                    };
+                    
+                    // Solo incluir password si se proporcionó uno nuevo (no vacío)
+                    if (password && password.trim() !== '') {
+                        updates.password = password;
+                    }
+                    
+                    const result = await updateAdministrator(editingAdminId, updates);
+                    if (!result.success) {
+                        return;
+                    }
+                } else {
+                    // Crear nuevo administrador
+                    const newAdmin = {
+                        name,
+                        email,
+                        password,
+                        permissions,
+                        isSupremo: false
+                    };
+                    
+                    const result = await saveAdministrators(newAdmin);
+                    if (!result.success) {
+                        return;
+                    }
+                }
+
+                await renderAdministrators();
+                modal.classList.remove('visible');
+            });
+
+            // Global functions for edit/delete
+            window.editAdmin = async function(id) {
+                const admins = await getAdministrators();
+                const admin = admins.find(a => a.id === id);
+                
+                if (admin) {
+                    editingAdminId = id;
+                    document.getElementById('modalTitle').textContent = 'Editar Administrador';
+                    document.getElementById('adminNameModal').value = admin.name || '';
+                    document.getElementById('adminEmailModal').value = admin.email || '';
+                    // No cargar password por seguridad (dejar campo vacío)
+                    document.getElementById('adminPasswordModal').value = '';
+                    document.getElementById('adminPasswordModal').placeholder = 'Dejar vacío para no cambiar';
+                    
+                    const hasAdminPermission = admin.permissions.includes('admin');
+                    
+                    document.querySelectorAll('.permission-checkbox').forEach(cb => {
+                        cb.checked = admin.permissions.includes(cb.dataset.permission);
+                        cb.disabled = false;
+                        cb.parentElement.style.opacity = '1';
+                    });
+                    
+                    if (hasAdminPermission && otherCheckboxes.length > 0) {
+                        otherCheckboxes.forEach(cb => {
+                            cb.checked = true;
+                            cb.disabled = true;
+                            cb.parentElement.style.opacity = '0.6';
+                        });
+                    }
+                    
+                    modal.classList.add('visible');
+                }
+            };
+
+            window.deleteAdmin = async function(id) {
+                // Eliminar sin confirmación
+                const result = await deleteAdministrator(id);
+                if (result.success) {
+                    await renderAdministrators();
+                }
+            };
+
+            // Modern Alert Function
+            function showModernAlert(message, type = 'info') {
+                const existingAlert = document.querySelector('.modern-alert');
+                if (existingAlert) existingAlert.remove();
+
+                const colors = {
+                    success: 'linear-gradient(135deg, #4CAF50 0%, #45a049 100%)',
+                    error: 'linear-gradient(135deg, #f44336 0%, #da190b 100%)',
+                    warning: 'linear-gradient(135deg, #ff9800 0%, #e68900 100%)',
+                    info: 'linear-gradient(135deg, var(--gold) 0%, #8a7548 100%)'
+                };
+
+                const prefixes = {
+                    success: '✓ ',
+                    error: '✕ ',
+                    warning: '! ',
+                    info: 'ⓘ '
+                };
+
+                const alert = document.createElement('div');
+                alert.className = 'modern-alert';
+                alert.style.cssText = `
+                    position: fixed;
+                    top: 2rem;
+                    right: 2rem;
+                    background: ${colors[type]};
+                    color: white;
+                    padding: 1rem 1.5rem;
+                    border-radius: 8px;
+                    box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+                    z-index: 10000;
+                    font-weight: 600;
+                    animation: slideIn 0.3s ease;
+                `;
+                alert.textContent = prefixes[type] + message.replace(/[✅❌⚠️ℹ️]/g, '').trim();
+                document.body.appendChild(alert);
+
+                setTimeout(() => {
+                    alert.style.animation = 'slideOut 0.3s ease';
+                    setTimeout(() => alert.remove(), 300);
+                }, 3000);
+            }
+
+            // Add animations
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes slideIn {
+                    from { transform: translateX(400px); opacity: 0; }
+                    to { transform: translateX(0); opacity: 1; }
+                }
+                @keyframes slideOut {
+                    from { transform: translateX(0); opacity: 1; }
+                    to { transform: translateX(400px); opacity: 0; }
+                }
+            `;
+            document.head.appendChild(style);
+
+            // Initial render
+            (async () => {
+                await renderAdministrators();
+            })();
+
+            // --- Botón de Logout ---
+            const logoutBtn = document.querySelector('.logout-btn');
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', async (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('🚪 Click en botón Salir');
+                    
+                    if (window.authService && typeof window.authService.logout === 'function') {
+                        try {
+                            window.authService.logout();
+                        } catch (error) {
+                            console.error('❌ Error al hacer logout:', error);
+                            sessionStorage.clear();
+                            window.location.href = '../client/area-clientes.html';
+                        }
+                    } else {
+                        console.warn('⚠️ authService no disponible, usando fallback');
+                        sessionStorage.clear();
+                        window.location.href = '../client/area-clientes.html';
+                    }
+                });
+            }
+        });
+    </script>
+
+</body>
+</html>
