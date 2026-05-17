@@ -19,8 +19,8 @@ const CONFIG = {
     // SUPABASE CONFIGURATION
     // ============================================
     supabase: {
-        url: 'https://rzwcpwrhvvyuzebsjlis.supabase.co',           // URL del proyecto
-        anonKey: 'sb_publishable_5qgO5puVe3e0CNw67U_SGw_F1DPQ-1x',  // Clave pública (anon key)
+        url: 'https://clyllexmxtwgjqgaswlq.supabase.co/rest/v1/',           // URL del proyecto
+        anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNseWxsZXhteHR3Z2pxZ2Fzd2xxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwNDY2MDcsImV4cCI6MjA5NDYyMjYwN30.imDCURe96RChmHnRSVkz6mTdyC8BcdMLkyg2dokFfys',  // Clave pública (anon key)
         // ⚠️ NUNCA expongas la service_role key en el frontend
     },
 
